@@ -1,3 +1,6 @@
+
+
+
 /*************************************************************************
 * Simple OBD Data Display
 * Works with any Arduino board connected with SH1106 128*64 I2C OLED and
@@ -11,6 +14,7 @@
 #include <MicroLCD.h>
 #include<Arduino.h>
 #include<U8g2lib.h>
+#include <U8x8lib.h>
 
 
 
@@ -25,8 +29,8 @@ COBD obd;
 #endif
 
 //Set parameters for the screen 
-U8G2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
-//U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+u8g2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+//u8g2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(u8g2_R0, /* reset=*/ U8X8_PIN_NONE);
  
 // Define the bitmap
 #define download_width 128
@@ -128,13 +132,15 @@ void draw(void) {
 //Funtion reconnect when no OBD connection
 void reconnect()
 {
-  lcd.clear();
-  lcd.setFontSize(FONT_SIZE_MEDIUM);
-  lcd.print("Reconnecting");
+  u8g2.clear();
+  //lcd.setFontSize(FONT_SIZE_MEDIUM);
+  u8g2.setFont(u8g2_font_sirclivethebold_tr);
+  //lcd.print("Reconnecting");
+  u8g2.print("Reconnecting");
   //digitalWrite(SD_CS_PIN, LOW);
   for (uint16_t i = 0; !obd.init(); i++) {
     if (i == 5) {
-      lcd.clear();
+      u8g2.clear();
     }
     delay(3000);
   }
@@ -143,63 +149,81 @@ void reconnect()
 //Function to retreive and display the data
 void showData(byte pid, int value)
 {
-  switch (pid) {
+  switch (pid) {                                
     case PID_COOLANT_TEMP:
-    lcd.setCursor(102, 0);
-    lcd.setFontSize(FONT_SIZE_SMALL);
-    lcd.printInt(value, 2);
-    lcd.print(" C");
+      u8g2.firstPage();
+      do {
+        u8g2.setFont(u8g2_font_chroma48medium8_8u);
+        u8g2.drawStr(0,10,"Coolant temp");
+        u8g2.drawStr(30,10,value);
+      } while ( u8g2.nextPage() );
+      delay(1000);
     break;
   case PID_INTAKE_TEMP:
       if (value >= 0 && value < 100) {
-          lcd.setCursor(102, 1);
-          lcd.setFontSize(FONT_SIZE_SMALL);
-          lcd.printInt(value, 2); 
-          lcd.print(" C");   
+        u8g2.firstPage();
+          do {
+            u8g2.setFont(u8g2_font_chroma48medium8_8u);
+            u8g2.drawStr(0,20,"Intake temp");
+            u8g2.drawStr(30,20,value);
+          } while ( u8g2.nextPage() );
+          delay(1000);  
       }
     break;
   case PID_DISTANCE:
-    lcd.setCursor(102, 2);
-    lcd.setFontSize(FONT_SIZE_SMALL);
-    lcd.printInt(value, 2);
-    break;
+    u8g2.firstPage();
+          do {
+            u8g2.setFont(u8g2_font_chroma48medium8_8u);
+            u8g2.drawStr(0,30,"Intake temp");
+            u8g2.drawStr(30,30,value);
+          } while ( u8g2.nextPage() );
+          delay(1000); 
+      break; 
   case PID_SPEED:
-    lcd.setCursor(102, 3);
-    lcd.setFontSize(FONT_SIZE_SMALL);
-    lcd.printInt((unsigned int)value % 1000, 3);
-    break;
+     u8g2.firstPage();
+          do {
+            u8g2.setFont(u8g2_font_chroma48medium8_8u);
+            u8g2.drawStr(0,40,"Intake temp");
+            u8g2.drawStr(30,40,(unsigned int)value % 1000, 3));
+          } while ( u8g2.nextPage() );
+          delay(1000); 
+      break;
   case PID_RPM:
-    lcd.setCursor(102, 4);
-    lcd.setFontSize(FONT_SIZE_SMALL);
-    lcd.printInt((unsigned int)value % 10000, 4);
+  u8g2.firstPage();
+          do {
+            u8g2.setFont(u8g2_font_chroma48medium8_8u);
+            u8g2.drawStr(0,50,"Intake temp");
+            u8g2.drawStr(30,50,(unsigned int)value % 10000, 4));
+          } while ( u8g2.nextPage() );
+          delay(1000); 
+      break;
     break;
   }
 }
 
+
+
 //Code to write static data to the screen during setup
 void initScreen()
 {
-  lcd.clear ();
-  lcd.setFontSize(FONT_SIZE_SMALL);
-  lcd.setCursor(0, 0);
-  lcd.print("COOLANT TEMP");
-  lcd.setCursor(0, 1);
-  lcd.print("INTAKE TEMP");
-  lcd.setCursor(0, 2);
-  lcd.print("DISTANCE");
-  lcd.setCursor(0, 3);
-  lcd.print("SPEED");
-  lcd.setCursor(0, 4);
-  lcd.print("RPM");
+  //u8g2.clear ();
+  //u8g2.setFontSize(FONT_SIZE_SMALL);
+  u8g2.setFont(u8g2_font_sirclivethebold_tr);
+  u8g2.setCursor(0, 0);
+  u8g2.print("COOLANT TEMP");
+  u8g2.setCursor(0, 1);
+  u8g2.print("INTAKE TEMP");
+  u8g2.setCursor(0, 2);
+  u8g2.print("DISTANCE");
+  u8g2.setCursor(0, 3);
+  u8g2.print("SPEED");
+  u8g2.setCursor(0, 4);
+  u8g2.print("RPM");
 }
 
 void setup()
 {
-  //lcd.begin();
-  //lcd.setFontSize(FONT_SIZE_MEDIUM);
-  //lcd.println("OBD DISPLAY");
-  //delay(500);
-  obd.begin();
+  /* obd.begin();
   delay(100);
   u8g2.begin();
   delay(100);
@@ -211,12 +235,16 @@ void setup()
   while (!obd.init());
   lcd.begin();
   delay (3000);
+  initScreen(); */
+  u8g2.begin();
+  delay (3000);
   initScreen();
+
 }
 
 void loop()
 {
-  static byte pids[]= {PID_RPM, PID_SPEED, PID_INTAKE_TEMP, PID_COOLANT_TEMP, PID_DISTANCE};
+  /*static byte pids[]= {PID_RPM, PID_SPEED, PID_INTAKE_TEMP, PID_COOLANT_TEMP, PID_DISTANCE};
   static byte index = 0;
   byte pid = pids[index];
   int value;
@@ -228,6 +256,6 @@ void loop()
 
   if (obd.errors >= 2) {
       reconnect();
-      setup();
+      setup(); */
   }
 }
