@@ -29,7 +29,7 @@ COBD obd;
 #endif
 
 //Set parameters for the screen 
-u8g2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+U8G2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 //u8g2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(u8g2_R0, /* reset=*/ U8X8_PIN_NONE);
  
 // Define the bitmap
@@ -132,11 +132,12 @@ void draw(void) {
 //Funtion reconnect when no OBD connection
 void reconnect()
 {
-  u8g2.clear();
-  //lcd.setFontSize(FONT_SIZE_MEDIUM);
-  u8g2.setFont(u8g2_font_sirclivethebold_tr);
-  //lcd.print("Reconnecting");
-  u8g2.print("Reconnecting");
+  u8g2.firstPage();
+    do {
+      u8g2.setFont(u8g2_font_roentgen_nbp_t_all);
+      u8g2.drawStr(0,15,"Reconnecting");
+    } while ( u8g2.nextPage() );
+      delay(1000);
   //digitalWrite(SD_CS_PIN, LOW);
   for (uint16_t i = 0; !obd.init(); i++) {
     if (i == 5) {
@@ -174,8 +175,9 @@ void showData(byte pid, int value)
     u8g2.firstPage();
           do {
             u8g2.setFont(u8g2_font_chroma48medium8_8u);
-            u8g2.drawStr(0,30,"Intake temp");
-            u8g2.drawStr(30,30,value);
+            u8g2.drawStr(0,30,"Distance");
+            u8g2.setCursor(30, 30);
+            u8g2.print(value);
           } while ( u8g2.nextPage() );
           delay(1000); 
       break; 
@@ -184,7 +186,8 @@ void showData(byte pid, int value)
           do {
             u8g2.setFont(u8g2_font_chroma48medium8_8u);
             u8g2.drawStr(0,40,"Intake temp");
-            u8g2.drawStr(30,40,(unsigned int)value % 1000, 3));
+            u8g2.setCursor(30, 40);
+            u8g2.print((unsigned int)value % 1000, 3);
           } while ( u8g2.nextPage() );
           delay(1000); 
       break;
@@ -193,10 +196,10 @@ void showData(byte pid, int value)
           do {
             u8g2.setFont(u8g2_font_chroma48medium8_8u);
             u8g2.drawStr(0,50,"Intake temp");
-            u8g2.drawStr(30,50,(unsigned int)value % 10000, 4));
+            u8g2.setCursor(30, 50);
+            u8g2.print((unsigned int)value % 10000, 4);
           } while ( u8g2.nextPage() );
           delay(1000); 
-      break;
     break;
   }
 }
@@ -206,9 +209,15 @@ void showData(byte pid, int value)
 //Code to write static data to the screen during setup
 void initScreen()
 {
-  //u8g2.clear ();
-  //u8g2.setFontSize(FONT_SIZE_SMALL);
-  u8g2.setFont(u8g2_font_sirclivethebold_tr);
+  u8g2.firstPage();
+          do {
+            u8g2.setFont(u8g2_font_roentgen_nbp_t_all);
+            u8g2.drawStr(0,10,"Coolant Temp");
+            u8g2.drawStr(0,20,"Intake Temp");
+          } while ( u8g2.nextPage() );
+          delay(1000);
+ 
+  /*u8g2.setFont(u8g2_font_sirclivethebold_tr);
   u8g2.setCursor(0, 0);
   u8g2.print("COOLANT TEMP");
   u8g2.setCursor(0, 1);
@@ -218,33 +227,21 @@ void initScreen()
   u8g2.setCursor(0, 3);
   u8g2.print("SPEED");
   u8g2.setCursor(0, 4);
-  u8g2.print("RPM");
+  u8g2.print("RPM"); */
 }
 
 void setup()
 {
-  /* obd.begin();
-  delay(100);
+
   u8g2.begin();
-  delay(100);
-  // picture loop
-  u8g2.firstPage();
-  do {
-      draw();
-      } while( u8g2.nextPage() );
-  while (!obd.init());
-  lcd.begin();
-  delay (3000);
-  initScreen(); */
-  u8g2.begin();
-  delay (3000);
-  initScreen();
+
 
 }
 
 void loop()
 {
-  /*static byte pids[]= {PID_RPM, PID_SPEED, PID_INTAKE_TEMP, PID_COOLANT_TEMP, PID_DISTANCE};
+
+  static byte pids[]= {PID_RPM, PID_SPEED, PID_INTAKE_TEMP, PID_COOLANT_TEMP, PID_DISTANCE};
   static byte index = 0;
   byte pid = pids[index];
   int value;
@@ -255,7 +252,9 @@ void loop()
   index = (index + 1) % sizeof(pids);
 
   if (obd.errors >= 2) {
+      initScreen();
+      delay(5000);
       reconnect();
-      setup(); */
-  }
+      setup(); 
+  } 
 }
