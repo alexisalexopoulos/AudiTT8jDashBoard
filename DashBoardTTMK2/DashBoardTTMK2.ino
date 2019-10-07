@@ -214,23 +214,16 @@ void showData(byte pid, int value)
 
 
 
-//Code to write static data to the screen during setup
-void initScreen()
-{
-  u8g2.setFont(u8g2_font_roentgen_nbp_t_all);
-  delay(1000);
- 
-}
-
 void setup()
 {
-    // initialize the button pin as a input:
+ u8g2.begin();
+  delay(500);
+  // initialize the button pin as a input:
   pinMode(buttonPin, INPUT);
   // initialize the LED as an output:
   pinMode(ledPin, OUTPUT);
   //Initializing the screen
-  u8g2.begin();;
-  delay(100);
+  delay(1000);
   // Drawing the splash screen
   drawSplash();
   delay(5000);
@@ -240,19 +233,19 @@ void setup()
 
 void loop()
 {
+  //Define pid from array
   byte pid = pids[index];
   // send a query to OBD adapter for specified OBD-II pid
-  if (obd.readPID(pid, value)) {
-
-     // read the pushbutton input pin:
+  //if (obd.readPID(pid, value)) {
+  // read the pushbutton input pin:
   buttonState = digitalRead(buttonPin);
 
   // compare the buttonState to its previous state
   if (buttonState != lastButtonState) {
     // if the state has changed, increment the counter
     if (buttonState == HIGH) {
-      u8g2.clear();
-      delay(50);
+      //u8g2.clear();
+      //delay(50);
       // if the current state is HIGH then the button went from off to on:
       buttonPushCounter++;
       buttonPushCounter = buttonPushCounter % number_of_screens;
@@ -262,32 +255,52 @@ void loop()
       //3 = PID_COOLANT_TEMP
         switch (buttonPushCounter)
         {
+        case 0:
+          //showData(pid, value);
+          u8g2.firstPage();
+          do {
+            u8g2.setFont(u8g2_font_ncenB14_tr);
+            u8g2.drawStr(50,50,"Speed");
+          } while ( u8g2.nextPage() );
+          break;
         case 1:
-          showData(pid, value);
+          //showData(pid, value);
+          u8g2.firstPage();
+          do {
+            u8g2.setFont(u8g2_font_ncenB14_tr);
+            u8g2.drawStr(50,50,"RPM");
+          } while ( u8g2.nextPage() );
           break;
         case 2:
-          showData(pid, value);
+          //showData(pid, value);
+          u8g2.firstPage();
+          do {
+            u8g2.setFont(u8g2_font_ncenB14_tr);
+            u8g2.drawStr(50,50,"Intake");
+          } while ( u8g2.nextPage() );
           break;
         case 3:
-          showData(pid, value);
-          break;
-        case 4:
-          showData(pid, value);
+          //showData(pid, value);
+          u8g2.firstPage();
+          do {
+            u8g2.setFont(u8g2_font_ncenB14_tr);
+            u8g2.drawStr(50,50,"Coolant");
+          } while ( u8g2.nextPage() );
           break;
         }
     }
     // Delay a little bit to avoid bouncing
     delay(50);
   }
-}
   // save the current state as the last state, for next time through the loop
   lastButtonState = buttonState;
-  index = (index + 1) % sizeof(pids);
+  index = (index + 1) % sizeof(pids);    
+  //}
 
 
-  if (obd.errors >= 2) {
-      delay(5000);
-      reconnect();
-      setup(); 
-  } 
+  /*if (obd.errors >= 2) {
+      delay(2000);
+      //reconnect();
+      //setup(); 
+  } */
 }
