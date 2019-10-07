@@ -29,8 +29,8 @@ COBD obd;
 #endif
 
 //Set parameters for the screen 
-//U8G2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);  //constructor for direct display
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);  //constructor for buffer display
+U8G2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);  //constructor for direct display
+//U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);  //constructor for buffer display
 
 //Define button and LED
 const int  buttonPin = 2;    // the pin that the pushbutton is attached to
@@ -40,6 +40,15 @@ const int ledPin = 12;       // the pin that the LED is attached to
 int buttonPushCounter = 0;   // counter for the number of button presses
 int buttonState = 0;         // current state of the button
 int lastButtonState = 0;     // previous state of the button
+
+//Defining array for PIDS
+static byte pids[]= {PID_RPM, PID_SPEED, PID_INTAKE_TEMP, PID_COOLANT_TEMP};
+//assigning an index to the array
+static byte index = 0;
+int value;
+ 
+//Define the screen pages
+int number_of_screens = 4; 
  
 // Define the bitmap
 #define download_width 128
@@ -180,16 +189,6 @@ void showData(byte pid, int value)
           delay(1000);  
       }
     break;
-  case PID_DISTANCE:
-    u8g2.firstPage();
-          do {
-            u8g2.setFont(u8g2_font_chroma48medium8_8u);
-            u8g2.drawStr(0,30,"Distance");
-            u8g2.setCursor(30, 30);
-            u8g2.print(value);
-          } while ( u8g2.nextPage() );
-          delay(1000); 
-      break; 
   case PID_SPEED:
      u8g2.firstPage();
           do {
@@ -235,32 +234,17 @@ void setup()
   // Drawing the splash screen
   drawSplash();
   delay(5000);
+  
 
 }
 
 void loop()
 {
-//putting the PIDS in an array
-  static byte pids[]= {PID_RPM, PID_SPEED, PID_INTAKE_TEMP, PID_COOLANT_TEMP, PID_DISTANCE};
-//assigning an index to the array
-  static byte index = 0;
   byte pid = pids[index];
-  int value;
   // send a query to OBD adapter for specified OBD-II pid
   if (obd.readPID(pid, value)) {
-      showData(pid, value);
-  }
-  index = (index + 1) % sizeof(pids);
 
-  if (obd.errors >= 2) {
-      delay(5000);
-      reconnect();
-      setup(); 
-  } 
-}
-
-void loop() {
-  // read the pushbutton input pin:
+     // read the pushbutton input pin:
   buttonState = digitalRead(buttonPin);
 
   // compare the buttonState to its previous state
@@ -271,33 +255,39 @@ void loop() {
       delay(50);
       // if the current state is HIGH then the button went from off to on:
       buttonPushCounter++;
-      lcd.setCursor(30, 30);
-      lcd.print(buttonPushCounter, DEC);
-    } else {
-      // if the current state is LOW then the button went from on to off:
-      u8g2.firstPage();
-    do {
-      u8g2.setFont(u8g2_font_roentgen_nbp_t_all);
-      u8g2.drawStr(0,15,"Off");
-    } while ( u8g2.nextPage() );
-      delay(50);
-      //lcd.print("off");
+      buttonPushCounter = buttonPushCounter % number_of_screens;
+      //0 = PID_SPEED
+      //1 = PID_RPM
+      //2 = PID_INTAKE_TEMP
+      //3 = PID_COOLANT_TEMP
+        switch (buttonPushCounter)
+        {
+        case 1:
+          showData(pid, value);
+          break;
+        case 2:
+          showData(pid, value);
+          break;
+        case 3:
+          showData(pid, value);
+          break;
+        case 4:
+          showData(pid, value);
+          break;
+        }
     }
     // Delay a little bit to avoid bouncing
     delay(50);
   }
+}
   // save the current state as the last state, for next time through the loop
   lastButtonState = buttonState;
+  index = (index + 1) % sizeof(pids);
 
 
-  // turns on the LED every four button pushes by checking the modulo of the
-  // button push counter. the modulo function gives you the remainder of the
-  // division of two numbers:
-  if (buttonPushCounter % 4 == 0) {
-    digitalWrite(ledPin, HIGH);
-  } else {
-    digitalWrite(ledPin, LOW);
-  }
-
+  if (obd.errors >= 2) {
+      delay(5000);
+      reconnect();
+      setup(); 
+  } 
 }
-
