@@ -37,12 +37,12 @@ const int  buttonPin = 2;    // the pin that the pushbutton is attached to
 const int ledPin = 12;       // the pin that the LED is attached to
 
 // Define vars for screen rotation
-int buttonPushCounter = 0;   // counter for the number of button presses
+int currentScreen = 0;   // counter for the number of button presses
 int buttonState = 0;         // current state of the button
 int lastButtonState = 0;     // previous state of the button
 
 //Defining array for PIDS
-static byte pids[]= {PID_RPM, PID_SPEED, PID_INTAKE_TEMP, PID_COOLANT_TEMP};
+static byte pids[]= {PID_SPEED,PID_RPM,PID_INTAKE_TEMP, PID_COOLANT_TEMP};
 //assigning an index to the array
 static byte index = 0;
 int value;
@@ -51,9 +51,9 @@ int value;
 int number_of_screens = 4; 
  
 // Define the bitmap
-#define download_width 128
-#define download_height 64
-static const unsigned char download_bits[] PROGMEM = {
+#define Audi_splash2_width 128
+#define Audi_splash2_height 64
+static const unsigned char Audi_splash2_bits[] PROGMEM = {
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf8, 0x1f,
@@ -142,9 +142,9 @@ static const unsigned char download_bits[] PROGMEM = {
    0x03, 0x00, 0x00, 0x00 };
 
 //Function to draw the bitmap
-void drawSplash(void) {
+void drawSplash() {
  // graphic commands to redraw the complete screen should be placed here  
- u8g2.drawXBMP( 0, 0, download_width, download_height, download_bits);
+ u8g2.drawXBMP( 0, 0, Audi_splash2_width, Audi_splash2_height, Audi_splash2_bits);
 }
 
 //Funtion reconnect when no OBD connection
@@ -165,6 +165,11 @@ void reconnect()
   }
 }
 
+/*Text block for vars
+u8g2.setFont(u8g2_font_roentgen_nbp_tr);
+u8g2.setCursor(0,50);
+u8g2.print(value);*/
+
 //Function to retreive and display the data
 void showData(byte pid, int value)
 {
@@ -172,9 +177,11 @@ void showData(byte pid, int value)
     case PID_COOLANT_TEMP:
       u8g2.firstPage();
       do {
-        u8g2.setFont(u8g2_font_chroma48medium8_8u);
+        u8g2.setFont(u8g2_font_roentgen_nbp_tr);
         u8g2.drawStr(0,10,"Coolant temp");
-        u8g2.drawStr(30,10,value);
+        u8g2.setFont(u8g2_font_roentgen_nbp_tr);
+        u8g2.setCursor(30,10);
+        u8g2.print(value);
       } while ( u8g2.nextPage() );
       delay(1000);
     break;
@@ -182,9 +189,11 @@ void showData(byte pid, int value)
       if (value >= 0 && value < 100) {
         u8g2.firstPage();
           do {
-            u8g2.setFont(u8g2_font_chroma48medium8_8u);
+            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
             u8g2.drawStr(0,20,"Intake temp");
-            u8g2.drawStr(30,20,value);
+            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
+            u8g2.setCursor(30,20);
+            u8g2.print(value);
           } while ( u8g2.nextPage() );
           delay(1000);  
       }
@@ -192,9 +201,10 @@ void showData(byte pid, int value)
   case PID_SPEED:
      u8g2.firstPage();
           do {
-            u8g2.setFont(u8g2_font_chroma48medium8_8u);
+            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
             u8g2.drawStr(0,40,"Intake temp");
-            u8g2.setCursor(30, 40);
+            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
+            u8g2.setCursor(30,40);
             u8g2.print((unsigned int)value % 1000, 3);
           } while ( u8g2.nextPage() );
           delay(1000); 
@@ -204,7 +214,8 @@ void showData(byte pid, int value)
           do {
             u8g2.setFont(u8g2_font_chroma48medium8_8u);
             u8g2.drawStr(0,50,"Intake temp");
-            u8g2.setCursor(30, 50);
+            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
+            u8g2.setCursor(30,50);
             u8g2.print((unsigned int)value % 10000, 4);
           } while ( u8g2.nextPage() );
           delay(1000); 
@@ -217,26 +228,29 @@ void showData(byte pid, int value)
 void setup()
 {
  u8g2.begin();
-  delay(500);
-  // initialize the button pin as a input:
-  pinMode(buttonPin, INPUT);
-  // initialize the LED as an output:
-  pinMode(ledPin, OUTPUT);
-  //Initializing the screen
-  delay(1000);
+  delay(200);
   // Drawing the splash screen
-  drawSplash();
-  delay(5000);
-  
-
+  u8g2.firstPage();
+  do {
+      drawSplash();
+      } while( u8g2.nextPage() );
+ delay(5000);
+ //Connect to OBD
+ while (!obd.init());
+  //Show start screen
+ byte pid = pids[currentScreen];
+     if (obd.readPID(pid, value)){
+        showData(pid, value);
+      }
+ delay(50);
 }
 
 void loop()
 {
   //Define pid from array
-  byte pid = pids[index];
+  byte pid = pids[currentScreen];
   // send a query to OBD adapter for specified OBD-II pid
-  //if (obd.readPID(pid, value)) {
+  if (obd.readPID(pid, value)) {
   // read the pushbutton input pin:
   buttonState = digitalRead(buttonPin);
 
@@ -244,63 +258,64 @@ void loop()
   if (buttonState != lastButtonState) {
     // if the state has changed, increment the counter
     if (buttonState == HIGH) {
-      //u8g2.clear();
-      //delay(50);
       // if the current state is HIGH then the button went from off to on:
-      buttonPushCounter++;
-      buttonPushCounter = buttonPushCounter % number_of_screens;
+      currentScreen++;
+      currentScreen = currentScreen % number_of_screens;
       //0 = PID_SPEED
       //1 = PID_RPM
       //2 = PID_INTAKE_TEMP
       //3 = PID_COOLANT_TEMP
-        switch (buttonPushCounter)
+      }
+
+      // save the current state as the last state, for next time through the loop
+      lastButtonState = buttonState;  
+
+        switch (currentScreen)
         {
         case 0:
           //showData(pid, value);
           u8g2.firstPage();
           do {
-            u8g2.setFont(u8g2_font_ncenB14_tr);
-            u8g2.drawStr(50,50,"Speed");
+            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
+            u8g2.drawStr(0,32,"Speed");
           } while ( u8g2.nextPage() );
           break;
         case 1:
           //showData(pid, value);
           u8g2.firstPage();
           do {
-            u8g2.setFont(u8g2_font_ncenB14_tr);
-            u8g2.drawStr(50,50,"RPM");
+            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
+            u8g2.drawStr(0,32,"RPM");
           } while ( u8g2.nextPage() );
           break;
         case 2:
           //showData(pid, value);
           u8g2.firstPage();
           do {
-            u8g2.setFont(u8g2_font_ncenB14_tr);
-            u8g2.drawStr(50,50,"Intake");
+            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
+            u8g2.drawStr(0,32,"Intake");
           } while ( u8g2.nextPage() );
           break;
         case 3:
           //showData(pid, value);
           u8g2.firstPage();
           do {
-            u8g2.setFont(u8g2_font_ncenB14_tr);
-            u8g2.drawStr(50,50,"Coolant");
+            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
+            u8g2.drawStr(0,32,"Coolant");
           } while ( u8g2.nextPage() );
           break;
         }
-    }
+  
     // Delay a little bit to avoid bouncing
     delay(50);
   }
-  // save the current state as the last state, for next time through the loop
-  lastButtonState = buttonState;
-  index = (index + 1) % sizeof(pids);    
-  //}
+  
+  }
 
 
-  /*if (obd.errors >= 2) {
+  if (obd.errors >= 2) {
       delay(2000);
-      //reconnect();
-      //setup(); 
-  } */
+      reconnect();
+      setup(); 
+  }
 }
