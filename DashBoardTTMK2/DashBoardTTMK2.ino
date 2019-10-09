@@ -230,6 +230,8 @@ void setup()
   pinMode(ledPin, OUTPUT);
   u8g2.begin();
   delay(200);
+   //Init OBD UART
+ obd.begin();
   //Turn on Led
   digitalWrite(ledPin, HIGH);
   // Drawing the splash screen
@@ -238,8 +240,6 @@ void setup()
         drawSplash();
     } while( u8g2.nextPage() );
  delay(2000);
- //Init OBD UART
- obd.begin();
  //Connect to OBD
  while (!obd.init());
   //Turn of ledPin
@@ -279,9 +279,10 @@ void loop()
         //byte pid = pids[currentScreen];
         // send a query to OBD adapter for specified OBD-II pid
     //if (obd.readPID(pid, value)) {
+      int value;
         
         if (currentScreen == 0) {
-          int value = 10;
+          int value;
           if (obd.readPID(PID_SPEED, value)) {                  // TACHO
             showData(PID_SPEED, value);
             delay(50);
@@ -289,7 +290,7 @@ void loop()
       }
 
        else if (currentScreen == 1) {
-          int value = 15;
+          int value;
           if (obd.readPID(PID_RPM, value)) {                  // TACHO
             showData(PID_RPM, value);
             delay(50);
@@ -297,7 +298,7 @@ void loop()
       }
 
        else if (currentScreen == 2) {
-          int value = 20;
+          int value;
           if (obd.readPID(PID_INTAKE_TEMP, value)) {                  // TACHO
             showData(PID_INTAKE_TEMP, value);
             delay(50);
@@ -305,7 +306,7 @@ void loop()
       }
 
        else if (currentScreen == 3) {
-          int value = 30;
+          int value;
           if (obd.readPID(PID_COOLANT_TEMP, value)) {                  // TACHO
             showData(PID_COOLANT_TEMP, value);
             delay(50);
