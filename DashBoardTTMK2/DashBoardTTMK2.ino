@@ -41,11 +41,6 @@ int currentScreen = 0;   // counter for the number of button presses
 int buttonState = 0;         // current state of the button
 int lastButtonState = 0;     // previous state of the button
 
-//Defining array for PIDS
-static byte pids[]= {PID_SPEED,PID_RPM,PID_INTAKE_TEMP, PID_COOLANT_TEMP};
-//assigning an index to the array
-static byte index = 0;
-int value;
  
 //Define the screen pages
 int number_of_screens = 4; 
@@ -150,6 +145,8 @@ void drawSplash() {
 //Funtion reconnect when no OBD connection
 void reconnect()
 {
+  //Turn on Led
+  digitalWrite(ledPin, HIGH);
   u8g2.firstPage();
     do {
       u8g2.setFont(u8g2_font_roentgen_nbp_t_all);
@@ -161,6 +158,8 @@ void reconnect()
     if (i == 5) {
       u8g2.clear();
     }
+    //Turn off Led
+  digitalWrite(ledPin, HIGH);
     delay(3000);
   }
 }
@@ -178,12 +177,12 @@ void showData(byte pid, int value)
       u8g2.firstPage();
       do {
         u8g2.setFont(u8g2_font_roentgen_nbp_tr);
-        u8g2.drawStr(0,10,"Coolant temp");
+        u8g2.drawStr(0,20,"Coolant temp");
         u8g2.setFont(u8g2_font_roentgen_nbp_tr);
-        u8g2.setCursor(30,10);
-        u8g2.print(value);
+        u8g2.setCursor(0,50);
+        u8g2.println(value);
       } while ( u8g2.nextPage() );
-      delay(1000);
+      delay(50);
     break;
   case PID_INTAKE_TEMP:
       if (value >= 0 && value < 100) {
@@ -192,33 +191,33 @@ void showData(byte pid, int value)
             u8g2.setFont(u8g2_font_roentgen_nbp_tr);
             u8g2.drawStr(0,20,"Intake temp");
             u8g2.setFont(u8g2_font_roentgen_nbp_tr);
-            u8g2.setCursor(30,20);
-            u8g2.print(value);
+            u8g2.setCursor(0,50);
+            u8g2.println(value);
           } while ( u8g2.nextPage() );
-          delay(1000);  
+          delay(50);  
       }
     break;
   case PID_SPEED:
      u8g2.firstPage();
           do {
             u8g2.setFont(u8g2_font_roentgen_nbp_tr);
-            u8g2.drawStr(0,40,"Intake temp");
+            u8g2.drawStr(0,20,"Speed");
             u8g2.setFont(u8g2_font_roentgen_nbp_tr);
-            u8g2.setCursor(30,40);
-            u8g2.print((unsigned int)value % 1000, 3);
+            u8g2.setCursor(0,50);
+            u8g2.println((unsigned int)value % 1000, 3);
           } while ( u8g2.nextPage() );
-          delay(1000); 
+          delay(50); 
       break;
   case PID_RPM:
   u8g2.firstPage();
           do {
-            u8g2.setFont(u8g2_font_chroma48medium8_8u);
-            u8g2.drawStr(0,50,"Intake temp");
             u8g2.setFont(u8g2_font_roentgen_nbp_tr);
-            u8g2.setCursor(30,50);
-            u8g2.print((unsigned int)value % 10000, 4);
+            u8g2.drawStr(0,20,"RPM");
+            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
+            u8g2.setCursor(0,50);
+            u8g2.println((unsigned int)value % 10000, 4);
           } while ( u8g2.nextPage() );
-          delay(1000); 
+          delay(50); 
     break;
   }
 }
@@ -227,30 +226,31 @@ void showData(byte pid, int value)
 
 void setup()
 {
- u8g2.begin();
+  //Init ledPin as output
+  pinMode(ledPin, OUTPUT);
+  u8g2.begin();
   delay(200);
+  //Turn on Led
+  digitalWrite(ledPin, HIGH);
   // Drawing the splash screen
   u8g2.firstPage();
-  do {
-      drawSplash();
-      } while( u8g2.nextPage() );
- delay(5000);
+    do {
+        drawSplash();
+    } while( u8g2.nextPage() );
+ delay(2000);
+ //Init OBD UART
+ obd.begin();
  //Connect to OBD
  while (!obd.init());
-  //Show start screen
- byte pid = pids[currentScreen];
-     if (obd.readPID(pid, value)){
-        showData(pid, value);
-      }
- delay(50);
+  //Turn of ledPin
+  digitalWrite(ledPin, LOW);
 }
 
 void loop()
 {
-  //Define pid from array
-  byte pid = pids[currentScreen];
-  // send a query to OBD adapter for specified OBD-II pid
-  if (obd.readPID(pid, value)) {
+  //Defining array for PIDS
+  //static byte pids[]= {PID_SPEED,PID_RPM,PID_INTAKE_TEMP, PID_COOLANT_TEMP};
+
   // read the pushbutton input pin:
   buttonState = digitalRead(buttonPin);
 
@@ -265,54 +265,53 @@ void loop()
       //1 = PID_RPM
       //2 = PID_INTAKE_TEMP
       //3 = PID_COOLANT_TEMP
+      // save the current state as the last state, for next time through the loop
+      // Delay a little bit to avoid bouncing
+    //Clear screen
+    u8g2.clear();
+    delay(100);
+    }
+  }
+
+  lastButtonState = buttonState;
+
+        //Define pid from array
+        //byte pid = pids[currentScreen];
+        // send a query to OBD adapter for specified OBD-II pid
+    //if (obd.readPID(pid, value)) {
+        
+        if (currentScreen == 0) {
+          int value = 10;
+          if (obd.readPID(PID_SPEED, value)) {                  // TACHO
+            showData(PID_SPEED, value);
+            delay(50);
+        }
       }
 
-      // save the current state as the last state, for next time through the loop
-      lastButtonState = buttonState;  
-
-        switch (currentScreen)
-        {
-        case 0:
-          //showData(pid, value);
-          u8g2.firstPage();
-          do {
-            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
-            u8g2.drawStr(0,32,"Speed");
-          } while ( u8g2.nextPage() );
-          break;
-        case 1:
-          //showData(pid, value);
-          u8g2.firstPage();
-          do {
-            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
-            u8g2.drawStr(0,32,"RPM");
-          } while ( u8g2.nextPage() );
-          break;
-        case 2:
-          //showData(pid, value);
-          u8g2.firstPage();
-          do {
-            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
-            u8g2.drawStr(0,32,"Intake");
-          } while ( u8g2.nextPage() );
-          break;
-        case 3:
-          //showData(pid, value);
-          u8g2.firstPage();
-          do {
-            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
-            u8g2.drawStr(0,32,"Coolant");
-          } while ( u8g2.nextPage() );
-          break;
+       else if (currentScreen == 1) {
+          int value = 15;
+          if (obd.readPID(PID_RPM, value)) {                  // TACHO
+            showData(PID_RPM, value);
+            delay(50);
         }
-  
-    // Delay a little bit to avoid bouncing
-    delay(50);
-  }
-  
-  }
+      }
 
+       else if (currentScreen == 2) {
+          int value = 20;
+          if (obd.readPID(PID_INTAKE_TEMP, value)) {                  // TACHO
+            showData(PID_INTAKE_TEMP, value);
+            delay(50);
+        }
+      }
 
+       else if (currentScreen == 3) {
+          int value = 30;
+          if (obd.readPID(PID_COOLANT_TEMP, value)) {                  // TACHO
+            showData(PID_COOLANT_TEMP, value);
+            delay(50);
+        }
+      }
+  
   if (obd.errors >= 2) {
       delay(2000);
       reconnect();
