@@ -7,6 +7,7 @@
 *************************************************************************/
 
 #include <Arduino.h>
+#include <U8g2lib.h>
 
 //#define MEMORY_SAVING
 
@@ -45,7 +46,7 @@ protected:
     byte m_flags;
 };
 
-class LCD_Null : public LCD_Common, public Print
+class LCD_Null : public LCD_Common, public U8G2
 {
 public:
     byte getLines() { return 0; }
@@ -76,7 +77,7 @@ private:
     byte m_row;
 };
 
-class LCD_SH1106 : public LCD_Common, public Print
+class LCD_SH1106 : public LCD_Common, public U8G2
 {
 public:
     void begin();
