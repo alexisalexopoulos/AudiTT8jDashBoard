@@ -12,14 +12,10 @@
 #include <Wire.h>
 #include <OBD2UART.h>
 #include<Arduino.h>
-#include <MicroLCD.h>
 #include<U8g2lib.h>
-#include <U8x8lib.h>
 
 
 
-
-LCD_SH1106 lcd;
 COBD obd;
 
 #ifdef U8X8_HAVE_HW_SPI
@@ -30,8 +26,7 @@ COBD obd;
 #endif
 
 //Set parameters for the screen
-U8G2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);  //constructor for direct display
-//U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);  //constructor for buffer display
+U8G2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
 //Define button and LED
 const int  buttonPin = 2;    // the pin that the pushbutton is attached to
@@ -53,6 +48,15 @@ int value;
 
 //Define the screen pages
 int number_of_screens = 4;
+
+//Vars for the coolant gauge
+float gs_rad; //stores angle from where to start in radinats
+float ge_rad; //stores angle where to stop in radinats
+byte cx=64; //x center
+byte cy=64; //y center
+byte radius=64; //radius
+byte percent=80; //needle percent
+byte t = 0; //draw the upper part
 
 // Define the bitmap
 #define Audi_splash2_width 128
@@ -145,10 +149,37 @@ static const unsigned char Audi_splash2_bits[] PROGMEM = {
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x07, 0x00, 0x00, 0x00, 0xf8,
    0x03, 0x00, 0x00, 0x00 };
 
+//Function to draw the Coolant gauge
+void Drawgauge(int x, byte y, byte r, byte p, int v, int minVal, int maxVal,  byte t ) {
+int n=(r/100.00)*p; // calculate needle percent lenght
+u8g2.firstPage();
+      do {
+        u8g2.setFont(u8g2_font_profont15_mf);
+          switch (t){
+            case 0: { //upper half
+                float gs_rad=-1.572;
+                float ge_rad=1.572;
+                float i=((v-minVal)*(ge_rad-gs_rad)/(maxVal-minVal)+gs_rad);
+                int xp = x+(sin(i) * n);
+                int yp = y-(cos(i) * n);
+                  u8g2.drawCircle(x,y,r, U8G2_DRAW_UPPER_LEFT|U8G2_DRAW_UPPER_RIGHT );
+                  u8g2.drawLine(x,y,xp,yp);
+                  u8g2.drawStr( 10, 64, "45");
+                  u8g2.drawStr( 60, 14, "90");
+                  u8g2.drawStr( 105, 64, "135");
+                  u8g2.drawStr( 45, 40, "Coolant");
+                  u8g2.setCursor(45,55);
+                  u8g2.print(value);
+                }
+                break;
+          }
+  } while ( u8g2.nextPage() );
+}
+
 //Function to draw the bitmap
 void drawSplash() {
  // graphic commands to redraw the complete screen should be placed here
- u8g2.drawXBMP( 0, 0, Audi_splash2_width, Audi_splash2_height, Audi_splash2_bits);
+  u8g2.drawXBMP( 0, 0, Audi_splash2_width, Audi_splash2_height, Audi_splash2_bits);
 }
 
 //Funtion reconnect when no OBD connection
@@ -182,14 +213,12 @@ u8g2.print(value);*/
 //Function to retreive and display the data
 void showData(byte pid, int value)
 {
+  u8g2.setFont(u8g2_font_profont15_mf);
   switch (pid) {
     case PID_COOLANT_TEMP:
-      //Draw static text
       u8g2.firstPage();
         do {
-          u8g2.setFont(u8g2_font_roentgen_nbp_tr);
-          u8g2.drawStr(0,20,"Intake temp");
-          u8g2.setFont(u8g2_font_roentgen_nbp_tr);
+          u8g2.drawStr(0,20,"Coolant temp");
           u8g2.setCursor(50,50);
           u8g2.print(value);
         } while ( u8g2.nextPage() );
@@ -197,12 +226,9 @@ void showData(byte pid, int value)
     break;
   case PID_INTAKE_TEMP:
       if (value >= 0 && value < 100) {
-        //Draw static text
         u8g2.firstPage();
           do {
-            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
             u8g2.drawStr(0,20,"Intake temp");
-            u8g2.setFont(u8g2_font_roentgen_nbp_tr);
             u8g2.setCursor(50,50);
             u8g2.print(value);
           } while ( u8g2.nextPage() );
@@ -210,26 +236,20 @@ void showData(byte pid, int value)
       }
     break;
   case PID_SPEED:
-    //Draw Static Text
     u8g2.firstPage();
     do {
-      u8g2.setFont(u8g2_font_roentgen_nbp_tr);
       u8g2.drawStr(0,20,"Speed");
-      u8g2.setFont(u8g2_font_roentgen_nbp_tr);
       u8g2.setCursor(50,50);
       u8g2.print((unsigned int)value % 1000);
       } while ( u8g2.nextPage() );
       delay(50);
       break;
   case PID_RPM:
-  //Draw Static text
     u8g2.firstPage();
       do {
-      u8g2.setFont(u8g2_font_roentgen_nbp_tr);
       u8g2.drawStr(0,20,"RPM");
-      u8g2.setFont(u8g2_font_roentgen_nbp_tr);
       u8g2.setCursor(50,50);
-      u8g2.print((unsigned int)value % 10000 /4);
+      u8g2.print((unsigned int)value % 10000);
       } while ( u8g2.nextPage() );
     delay(50);
     break;
@@ -303,7 +323,7 @@ void loop()
       {
         showData(PID_RPM, value);
       }
-      int lastRPM = value;                 // TACHO
+      int lastRPM = value;
   }
 }
 //INTAKE TEMP
@@ -315,7 +335,7 @@ void loop()
         showData(PID_INTAKE_TEMP, value);
       }
       int lastIntakeTemp = value;
-  }
+    }
   }
 //COOLANT TEMP
   else if (currentScreen == 3) {
@@ -323,12 +343,13 @@ void loop()
       if (obd.readPID(PID_COOLANT_TEMP, value)) {
         if (value != lastCoolantTemp || value == 0)
         {
-        showData(PID_COOLANT_TEMP, value);
+        //showData(PID_COOLANT_TEMP, value);
+        Drawgauge(cx,cy,radius,percent,value,45,135,t);
         }
         int lastCoolantTemp = value;
     }
   }
-//Reconnect is no connection
+//Reconnect if no connection
   if (obd.errors >= 2) {
       delay(2000);
       reconnect();
