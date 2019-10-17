@@ -214,46 +214,33 @@ u8g2.print(value);*/
 void showData(byte pid, int value)
 {
   u8g2.setFont(u8g2_font_profont15_mf);
-  switch (pid) {
-    case PID_COOLANT_TEMP:
-      u8g2.firstPage();
-        do {
-          u8g2.drawStr(0,20,"Coolant temp");
-          u8g2.setCursor(50,50);
-          u8g2.print(value);
-        } while ( u8g2.nextPage() );
-      delay(50);
-    break;
-  case PID_INTAKE_TEMP:
-      if (value >= 0 && value < 100) {
-        u8g2.firstPage();
-          do {
-            u8g2.drawStr(0,20,"Intake temp");
-            u8g2.setCursor(50,50);
-            u8g2.print(value);
-          } while ( u8g2.nextPage() );
-          delay(50);
-      }
-    break;
-  case PID_SPEED:
-    u8g2.firstPage();
-    do {
-      u8g2.drawStr(0,20,"Speed");
-      u8g2.setCursor(50,50);
-      u8g2.print((unsigned int)value % 1000);
-      } while ( u8g2.nextPage() );
-      delay(50);
-      break;
-  case PID_RPM:
-    u8g2.firstPage();
+  u8g2.firstPage();
       do {
-      u8g2.drawStr(0,20,"RPM");
-      u8g2.setCursor(50,50);
-      u8g2.print((unsigned int)value % 10000);
-      } while ( u8g2.nextPage() );
-    delay(50);
-    break;
-  }
+          switch (pid) {
+            case PID_COOLANT_TEMP:
+                  u8g2.drawStr(0,20,"Coolant temp");
+                  u8g2.setCursor(50,50);
+                  u8g2.print(value);
+            break;
+          case PID_INTAKE_TEMP:
+              if (value >= 0 && value < 100) {
+                    u8g2.drawStr(0,20,"Intake temp");
+                    u8g2.setCursor(50,50);
+                    u8g2.print(value);
+              }
+            break;
+          case PID_SPEED:
+              u8g2.drawStr(0,20,"Speed");
+              u8g2.setCursor(50,50);
+              u8g2.print((unsigned int)value % 1000);
+              break;
+          case PID_RPM:
+              u8g2.drawStr(0,20,"RPM");
+              u8g2.setCursor(50,50);
+              u8g2.print((unsigned int)value % 10000);
+            break;
+          }
+        } while ( u8g2.nextPage() );
 }
 
 
