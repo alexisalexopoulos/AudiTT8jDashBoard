@@ -1,14 +1,3 @@
-
-
-
-/*************************************************************************
-* Simple OBD Data Display
-* Works with any Arduino board connected with SH1106 128*64 I2C OLED and
-* Freematics OBD-II UART Adapter - https://freematics.com/products
-* Distributed under public domain
-* Written by Stanley Huang <stanley@freematics.com.au>
-*************************************************************************/
-
 #include <Wire.h>
 #include <OBD2UART.h>
 #include<Arduino.h>
@@ -37,26 +26,36 @@ int currentScreen = 0;   // counter for the number of button presses
 int buttonState = 0;         // current state of the button
 int lastButtonState = 0;     // previous state of the button
 
+//Define vars for gauge on first page
+byte centerx=30; //x center
+byte centery=32; //y center
+byte radius=30; //radius
+byte percent=90; //needle percent
+int minVal = 0;
+int maxVal = 10000;
+int n=(radius/100.00)*percent;
+float gs_rad=-1.572;
+float ge_rad=3.141;
+
+
 //Define vars for updating screen
 int lastSpeed = 0;
 int lastRPM = 0;
 int lastIntakeTemp = 0;
 int lastCoolantTemp = 0;
 
+//define screen constants
+const int SCREEN_1 = 0;
+const int SCREEN_2 = 1;
+
+
+
 //Define int for PIDS
 int value;
 
 //Define the screen pages
-int number_of_screens = 4;
+int number_of_screens = 1;
 
-//Vars for the coolant gauge
-float gs_rad; //stores angle from where to start in radinats
-float ge_rad; //stores angle where to stop in radinats
-byte cx=64; //x center
-byte cy=64; //y center
-byte radius=64; //radius
-byte percent=80; //needle percent
-byte t = 0; //draw the upper part
 
 // Define the bitmap
 #define Audi_splash2_width 128
@@ -149,32 +148,6 @@ static const unsigned char Audi_splash2_bits[] PROGMEM = {
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x07, 0x00, 0x00, 0x00, 0xf8,
    0x03, 0x00, 0x00, 0x00 };
 
-//Function to draw the Coolant gauge
-void Drawgauge(int x, byte y, byte r, byte p, int v, int minVal, int maxVal,  byte t ) {
-int n=(r/100.00)*p; // calculate needle percent lenght
-u8g2.firstPage();
-      do {
-        u8g2.setFont(u8g2_font_profont15_mf);
-          switch (t){
-            case 0: { //upper half
-                float gs_rad=-1.572;
-                float ge_rad=1.572;
-                float i=((v-minVal)*(ge_rad-gs_rad)/(maxVal-minVal)+gs_rad);
-                int xp = x+(sin(i) * n);
-                int yp = y-(cos(i) * n);
-                  u8g2.drawCircle(x,y,r, U8G2_DRAW_UPPER_LEFT|U8G2_DRAW_UPPER_RIGHT );
-                  u8g2.drawLine(x,y,xp,yp);
-                  u8g2.drawStr( 10, 64, "45");
-                  u8g2.drawStr( 60, 14, "90");
-                  u8g2.drawStr( 105, 64, "135");
-                  u8g2.drawStr( 45, 40, "Coolant");
-                  u8g2.setCursor(45,55);
-                  u8g2.print(value);
-                }
-                break;
-          }
-  } while ( u8g2.nextPage() );
-}
 
 //Function to draw the bitmap
 void drawSplash() {
@@ -205,42 +178,55 @@ void reconnect()
   }
 }
 
+
+
 /*Text block for vars
 u8g2.setFont(u8g2_font_roentgen_nbp_tr);
 u8g2.setCursor(0,50);
 u8g2.print(value);*/
 
-//Function to retreive and display the data
-void showData(byte pid, int value)
+
+//Draw the screen
+void DrawScreen(int thescreen)
 {
-  u8g2.setFont(u8g2_font_profont15_mf);
   u8g2.firstPage();
-      do {
-          switch (pid) {
-            case PID_COOLANT_TEMP:
-                  u8g2.drawStr(0,20,"Coolant temp");
-                  u8g2.setCursor(50,50);
-                  u8g2.print(value);
-            break;
-          case PID_INTAKE_TEMP:
-              if (value >= 0 && value < 100) {
-                    u8g2.drawStr(0,20,"Intake temp");
-                    u8g2.setCursor(50,50);
-                    u8g2.print(value);
-              }
-            break;
-          case PID_SPEED:
-              u8g2.drawStr(0,20,"Speed");
-              u8g2.setCursor(50,50);
-              u8g2.print((unsigned int)value % 1000);
-              break;
-          case PID_RPM:
-              u8g2.drawStr(0,20,"RPM");
-              u8g2.setCursor(50,50);
-              u8g2.print((unsigned int)value % 10000);
-            break;
+  do {
+    switch (thescreen) {
+      case 0:
+          static byte pids[2] = {PID_SPEED, PID_RPM};
+          int values[sizeof(pids)] = {};
+          if(obd.readPID(pids, sizeof(pids), values) == sizeof(pids)) {
+            // teken heel scherm 1 - je hebt 2 values :)
+            float i=((values[1]-0)*(ge_rad-gs_rad)/(maxVal-minVal)+gs_rad);
+            int xp = centerx+(sin(i) * n);
+            int yp = centery-(cos(i) * n);
+            u8g2.drawCircle(centerx,centery,radius, U8G2_DRAW_UPPER_LEFT|U8G2_DRAW_UPPER_RIGHT|U8G2_DRAW_LOWER_RIGHT );
+            u8g2.drawLine(centerx,centery,xp,yp);
+            u8g2.drawFrame(32,32,32,32);            
+            u8g2.setFont(u8g2_font_profont10_mf);
+            u8g2.drawStr(0,60,"speed");
+            u8g2.setCursor(45,55);
+            u8g2.print((unsigned int)values[0] % 1000);
+            u8g2.drawStr(32,20,"RPM");
+            u8g2.setCursor(32,40);
+            u8g2.print((unsigned int)values[1] % 10000);
           }
-        } while ( u8g2.nextPage() );
+          break;
+      case 1:
+          static byte pids1[3] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP};
+          int values1[sizeof(pids1)] = {};
+          // we weten welke pids we gaan ophalen
+          if(obd.readPID(pids1, sizeof(pids1), values1) == sizeof(pids1)) {          
+            u8g2.drawStr(0,20,"Coolant temp");
+            u8g2.setCursor(50,20);
+            u8g2.print(values1[0]);
+            u8g2.drawStr(0,40,"Coolant temp");
+            u8g2.setCursor(50,40);
+            u8g2.print(values1[1]);
+          }
+          break;
+    } 
+  } while( u8g2.nextPage() );
 }
 
 
@@ -272,6 +258,8 @@ void setup()
 
 void loop()
 {
+
+
   // read the pushbutton input pin:
   buttonState = digitalRead(buttonPin);
 
@@ -290,52 +278,9 @@ void loop()
 // save the current state as the last state, for next time through the loop
   lastButtonState = buttonState;
 
-//Display pages
-//SPEED
-  if (currentScreen == 0) {
-    //Write OBD values
-    if (obd.readPID(PID_SPEED, value)) {
-        if (value != lastSpeed || value == 0)
-        {
-          showData(PID_SPEED, value);
-        }
-    int lastSpeed = value;
-  }
-}
-//RPM
-  else if (currentScreen == 1) {
-    //Write OBD values
-    if (obd.readPID(PID_RPM, value)) {
-      if (value != lastRPM || value == 0)
-      {
-        showData(PID_RPM, value);
-      }
-      int lastRPM = value;
-  }
-}
-//INTAKE TEMP
-  else if (currentScreen == 2) {
-    //Write OBD Values
-    if (obd.readPID(PID_INTAKE_TEMP, value)) {
-      if (value != lastIntakeTemp || value == 0)
-      {
-        showData(PID_INTAKE_TEMP, value);
-      }
-      int lastIntakeTemp = value;
-    }
-  }
-//COOLANT TEMP
-  else if (currentScreen == 3) {
-      //Write OBD values
-      if (obd.readPID(PID_COOLANT_TEMP, value)) {
-        if (value != lastCoolantTemp || value == 0)
-        {
-        //showData(PID_COOLANT_TEMP, value);
-        Drawgauge(cx,cy,radius,percent,value,45,135,t);
-        }
-        int lastCoolantTemp = value;
-    }
-  }
+  //Draw the screens
+  DrawScreen(currentScreen);
+  
 //Reconnect if no connection
   if (obd.errors >= 2) {
       delay(2000);

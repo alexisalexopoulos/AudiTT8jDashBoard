@@ -5,7 +5,26 @@
 		},
 		{
 			"path": "C:\\Repos\\ArduinoOBD"
+		},
+		{
+			"path": "C:\\Users\\Alexis\\Documents\\AudiDashBoardProject\\Sample-Code"
+		},
+		{
+			"path": "C:\\Users\\Alexis\\Documents\\Arduino\\Test"
+		},
+		{
+			"path": "C:\\Users\\Alexis\\Documents\\Arduino"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"array": "cpp",
+			"deque": "cpp",
+			"list": "cpp",
+			"string": "cpp",
+			"unordered_map": "cpp",
+			"vector": "cpp",
+			"initializer_list": "cpp"
+		}
+	}
 }
