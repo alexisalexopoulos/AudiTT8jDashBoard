@@ -38,20 +38,6 @@ float gs_rad=-1.572;
 float ge_rad=3.141;
 
 
-//Define vars for updating screen
-int lastSpeed = 0;
-int lastRPM = 0;
-int lastIntakeTemp = 0;
-int lastCoolantTemp = 0;
-
-//define screen constants
-const int SCREEN_1 = 0;
-const int SCREEN_2 = 1;
-
-
-
-//Define int for PIDS
-int value;
 
 //Define the screen pages
 int number_of_screens = 1;
@@ -202,7 +188,7 @@ void DrawScreen(int thescreen)
             int yp = centery-(cos(i) * n);
             u8g2.drawCircle(centerx,centery,radius, U8G2_DRAW_UPPER_LEFT|U8G2_DRAW_UPPER_RIGHT|U8G2_DRAW_LOWER_RIGHT );
             u8g2.drawLine(centerx,centery,xp,yp);
-            u8g2.drawFrame(32,32,32,32);            
+            u8g2.drawFrame(32,32,32,32);
             u8g2.setFont(u8g2_font_profont10_mf);
             u8g2.drawStr(0,60,"speed");
             u8g2.setCursor(45,55);
@@ -216,7 +202,7 @@ void DrawScreen(int thescreen)
           static byte pids1[3] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP};
           int values1[sizeof(pids1)] = {};
           // we weten welke pids we gaan ophalen
-          if(obd.readPID(pids1, sizeof(pids1), values1) == sizeof(pids1)) {          
+          if(obd.readPID(pids1, sizeof(pids1), values1) == sizeof(pids1)) {
             u8g2.drawStr(0,20,"Coolant temp");
             u8g2.setCursor(50,20);
             u8g2.print(values1[0]);
