@@ -32,7 +32,7 @@ byte centery=32; //y center
 byte radius=30; //radius
 byte percent=90; //needle percent
 int minVal = 0;
-int maxVal = 10000;
+int maxVal = 8000;
 int n=(radius/100.00)*percent;
 float gs_rad=-1.572;
 float ge_rad=3.141;
@@ -40,7 +40,7 @@ float ge_rad=3.141;
 
 
 //Define the screen pages
-int number_of_screens = 1;
+int number_of_screens = 3;
 
 
 // Define the bitmap
@@ -188,8 +188,7 @@ void DrawScreen(int thescreen)
             int yp = centery-(cos(i) * n);
             u8g2.drawCircle(centerx,centery,radius, U8G2_DRAW_UPPER_LEFT|U8G2_DRAW_UPPER_RIGHT|U8G2_DRAW_LOWER_RIGHT );
             u8g2.drawLine(centerx,centery,xp,yp);
-            u8g2.drawFrame(32,32,32,32);
-            u8g2.setFont(u8g2_font_profont10_mf);
+            u8g2.setFont(u8g2_font_profont17_mf);
             u8g2.drawStr(0,60,"speed");
             u8g2.setCursor(45,55);
             u8g2.print((unsigned int)values[0] % 1000);
@@ -199,19 +198,34 @@ void DrawScreen(int thescreen)
           }
           break;
       case 1:
-          static byte pids1[3] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP};
+          static byte pids1[2] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP};
           int values1[sizeof(pids1)] = {};
           // we weten welke pids we gaan ophalen
           if(obd.readPID(pids1, sizeof(pids1), values1) == sizeof(pids1)) {
+            u8g2.setFont(u8g2_font_profont17_mf);
             u8g2.drawStr(0,20,"Coolant temp");
             u8g2.setCursor(50,20);
             u8g2.print(values1[0]);
-            u8g2.drawStr(0,40,"Coolant temp");
+            u8g2.drawStr(0,40,"Intake temp");
             u8g2.setCursor(50,40);
             u8g2.print(values1[1]);
           }
           break;
-    } 
+      case 2:
+          static byte pids2[3] = {PID_FUEL_LEVEL,PID_ENGINE_TORQUE_PERCENTAGE};
+          int values2[sizeof(pids1)] = {};
+          // we weten welke pids we gaan ophalen
+          if(obd.readPID(pids2, sizeof(pids2), values2) == sizeof(pids2)) {
+            u8g2.setFont(u8g2_font_profont17_mf);
+            u8g2.drawStr(0,20,"Fuel");
+            u8g2.setCursor(50,20);
+            u8g2.print(values2[0]);
+            u8g2.drawStr(0,40,"Torque");
+            u8g2.setCursor(50,40);
+            u8g2.print(values2[1]);
+  }
+  break;
+    }
   } while( u8g2.nextPage() );
 }
 
@@ -266,7 +280,7 @@ void loop()
 
   //Draw the screens
   DrawScreen(currentScreen);
-  
+
 //Reconnect if no connection
   if (obd.errors >= 2) {
       delay(2000);
