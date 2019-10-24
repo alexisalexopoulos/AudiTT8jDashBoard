@@ -213,7 +213,7 @@ void DrawScreen(int thescreen)
           break;
       case 2:
           static byte pids2[3] = {PID_FUEL_LEVEL,PID_ENGINE_TORQUE_PERCENTAGE};
-          int values2[sizeof(pids1)] = {};
+          int values2[sizeof(pids2)] = {};
           // we weten welke pids we gaan ophalen
           if(obd.readPID(pids2, sizeof(pids2), values2) == sizeof(pids2)) {
             u8g2.setFont(u8g2_font_profont17_mf);
