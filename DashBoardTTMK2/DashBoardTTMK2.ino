@@ -37,10 +37,14 @@ int n=(radius/100.00)*percent;
 float gs_rad=-1.572;
 float ge_rad=3.141;
 
-
+//Define Pid arrays
+//const PROGMEM byte pidsScreen1[2] = {PID_SPEED, PID_RPM}; // pids screen #1
+static byte pidsScreen1[2] = {PID_SPEED, PID_RPM};
+static byte pidsScreen2[2] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP};
+static byte pidsScreen3[2] = {PID_FUEL_LEVEL, PID_ENGINE_TORQUE_PERCENTAGE};
 
 //Define the screen pages
-int number_of_screens = 3;
+int number_of_screens = 2;
 
 
 // Define the bitmap
@@ -172,61 +176,139 @@ u8g2.setCursor(0,50);
 u8g2.print(value);*/
 
 
-//Draw the screen
-void DrawScreen(int thescreen)
-{
-  u8g2.firstPage();
-  do {
-    switch (thescreen) {
-      case 0:
-          static byte pids[2] = {PID_SPEED, PID_RPM};
-          int values[sizeof(pids)] = {};
-          if(obd.readPID(pids, sizeof(pids), values) == sizeof(pids)) {
-            // teken heel scherm 1 - je hebt 2 values :)
-            float i=((values[1]-0)*(ge_rad-gs_rad)/(maxVal-minVal)+gs_rad);
-            int xp = centerx+(sin(i) * n);
-            int yp = centery-(cos(i) * n);
-            u8g2.drawCircle(centerx,centery,radius, U8G2_DRAW_UPPER_LEFT|U8G2_DRAW_UPPER_RIGHT|U8G2_DRAW_LOWER_RIGHT );
-            u8g2.drawLine(centerx,centery,xp,yp);
-            u8g2.setFont(u8g2_font_profont17_mf);
-            u8g2.drawStr(0,60,"speed");
-            u8g2.setCursor(45,55);
-            u8g2.print((unsigned int)values[0] % 1000);
-            u8g2.drawStr(32,20,"RPM");
-            u8g2.setCursor(32,40);
-            u8g2.print((unsigned int)values[1] % 10000);
-          }
-          break;
-      case 1:
-          static byte pids1[2] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP};
-          int values1[sizeof(pids1)] = {};
-          // we weten welke pids we gaan ophalen
-          if(obd.readPID(pids1, sizeof(pids1), values1) == sizeof(pids1)) {
-            u8g2.setFont(u8g2_font_profont17_mf);
-            u8g2.drawStr(0,20,"Coolant temp");
-            u8g2.setCursor(50,20);
-            u8g2.print(values1[0]);
-            u8g2.drawStr(0,40,"Intake temp");
-            u8g2.setCursor(50,40);
-            u8g2.print(values1[1]);
-          }
-          break;
-      case 2:
-          static byte pids2[3] = {PID_FUEL_LEVEL,PID_ENGINE_TORQUE_PERCENTAGE};
-          int values2[sizeof(pids1)] = {};
-          // we weten welke pids we gaan ophalen
-          if(obd.readPID(pids2, sizeof(pids2), values2) == sizeof(pids2)) {
-            u8g2.setFont(u8g2_font_profont17_mf);
-            u8g2.drawStr(0,20,"Fuel");
-            u8g2.setCursor(50,20);
-            u8g2.print(values2[0]);
-            u8g2.drawStr(0,40,"Torque");
-            u8g2.setCursor(50,40);
-            u8g2.print(values2[1]);
-  }
-  break;
+//Draw the screen with live values
+void DrawScreen(int thescreen) {
+  switch (thescreen) {
+    case 0: {
+        int valuesScreen1[sizeof(pidsScreen1)] = {};
+        if(obd.readPID(pidsScreen1, sizeof(pidsScreen1), valuesScreen1) == sizeof(pidsScreen1)) {
+          // Draw gauge
+          float i = ((valuesScreen1[1] - 0) * (ge_rad - gs_rad) / (maxVal - minVal) + gs_rad);
+          int xp = centerx + (sin(i) * n);
+          int yp = centery - (cos(i) * n);
+          u8g2.firstPage();
+          do {
+            u8g2.drawCircle(centerx, centery, radius, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_LOWER_RIGHT);
+            u8g2.drawLine(centerx, centery, xp, yp);
+            // we weten welke pids we gaan ophalen
+            u8g2.setFont(u8g2_font_profont15_mf);
+            u8g2.drawStr(64, 10, "speed");
+            u8g2.drawStr(64, 30, "RPM");
+            u8g2.setCursor(100, 10);
+            u8g2.print((unsigned int)valuesScreen1[0] % 1000);
+            u8g2.setCursor(100, 30);
+            u8g2.print((unsigned int)valuesScreen1[1] % 10000);
+            } while (u8g2.nextPage());
+        }
+      break;
     }
-  } while( u8g2.nextPage() );
+    case 1: {
+        int valuesScreen2[sizeof(pidsScreen2)] = {};
+        // we weten welke pids we gaan ophalen
+        if(obd.readPID(pidsScreen2, sizeof(pidsScreen2), valuesScreen2) == sizeof(pidsScreen2)) {
+          u8g2.firstPage();
+          do {
+            u8g2.setFont(u8g2_font_profont15_mf);
+            u8g2.drawStr(0, 10, "Coolant temp");
+            u8g2.drawStr(0, 30, "Intake temp");
+            u8g2.setCursor(100, 10);
+            u8g2.print(valuesScreen2[0]);
+            u8g2.setCursor(100, 30);
+            u8g2.print(valuesScreen2[1]);
+            } while (u8g2.nextPage());
+        }
+      break;
+    }
+    case 2: {
+        int valuesScreen3[sizeof(pidsScreen3)] = {};
+        // we weten welke pids we gaan ophalen
+        if(obd.readPID(pidsScreen3, sizeof(pidsScreen3), valuesScreen3) == sizeof(pidsScreen3)) {
+          u8g2.firstPage();
+          do {
+            u8g2.setFont(u8g2_font_profont15_mf);
+            u8g2.drawStr(0, 10, "Fuel");
+            u8g2.drawStr(0, 10, "Torque");
+            u8g2.setCursor(100, 10);
+            u8g2.print(valuesScreen3[0]);
+            u8g2.setCursor(100, 30);
+            u8g2.print(valuesScreen3[1]);
+            } while (u8g2.nextPage());
+        }
+      break;
+    }
+  }
+}
+
+//Draw the screen with static values
+void DrawScreenStatic(int thescreen) {
+  switch (thescreen) {
+    case 0: {
+      u8g2.firstPage();
+      do {
+        static byte pids[2] = {PID_SPEED, PID_RPM};
+        int valuesStatic[sizeof(pids)] = {};
+        valuesStatic[0] = 15;
+        valuesStatic[1] = 25;
+        // teken heel scherm 1 - je hebt 2 values :)
+        float i = ((valuesStatic[1] - 0) * (ge_rad - gs_rad) / (maxVal - minVal) + gs_rad);
+        int xp = centerx + (sin(i) * n);
+        int yp = centery - (cos(i) * n);
+        u8g2.drawCircle(centerx, centery, radius, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_LOWER_RIGHT);
+        u8g2.drawLine(centerx, centery, xp, yp);
+        u8g2.setFont(u8g2_font_profont17_mf);
+        u8g2.drawStr(0, 60, "speed");
+        u8g2.setCursor(45, 55);
+        u8g2.print((unsigned int)valuesStatic[0] % 1000);
+        u8g2.drawStr(32, 20, "RPM");
+        u8g2.setCursor(32, 40);
+        u8g2.print((unsigned int)valuesStatic[1] % 10000);
+      } while (u8g2.nextPage());
+      break;
+    }
+    case 1: {
+      u8g2.firstPage();
+      do {
+        static byte pids1[2] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP};
+        int valuesStatic1[sizeof(pids1)] = {};
+        valuesStatic1[0] = 55;
+        valuesStatic1[1] = 60;
+        // we weten welke pids we gaan ophalen
+        u8g2.drawStr(0, 20, "Coolant temp");
+        u8g2.drawStr(0, 40, "Intake temp");
+        u8g2.setFont(u8g2_font_profont17_mf);
+        u8g2.setCursor(50, 20);
+        u8g2.print(valuesStatic1[0]);
+        u8g2.setCursor(50, 40);
+        u8g2.print(valuesStatic1[1]);
+        u8g2.setFont(u8g2_font_profont17_mf);
+        u8g2.drawStr(0, 60, "speed");
+        u8g2.setCursor(45, 55);
+        u8g2.print((unsigned int)valuesStatic1[0] % 1000);
+        u8g2.drawStr(32, 20, "RPM");
+        u8g2.setCursor(32, 40);
+        u8g2.print((unsigned int)valuesStatic1[1] % 10000);
+      } while (u8g2.nextPage());
+      break;
+    }
+    case 2: {
+      u8g2.firstPage();
+      do {
+        static byte pids2[3] = {PID_FUEL_LEVEL, PID_ENGINE_TORQUE_PERCENTAGE};
+        int valuesStatic2[sizeof(pids2)] = {};
+        valuesStatic2[0] = 10;
+        valuesStatic2[1] = 100;
+        // we weten welke pids we gaan ophalen
+        //u8g2.setFont(u8g2_font_profont17_mf);
+        u8g2.drawStr(0, 20, "Fuel");
+        u8g2.setCursor(50, 20);
+        u8g2.print(valuesStatic2[0]);
+        u8g2.drawStr(0, 40, "Torque");
+        u8g2.setCursor(50, 40);
+        u8g2.print(valuesStatic2[1]);
+      } while (u8g2.nextPage());
+      break;
+    }
+  }
 }
 
 
@@ -271,7 +353,7 @@ void loop()
       currentScreen++;
       currentScreen = currentScreen % number_of_screens;
       // Delay a little bit to avoid bouncing
-      delay(50);
+      delay(100);
       u8g2.clear();
     }
   }
