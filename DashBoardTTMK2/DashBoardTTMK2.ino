@@ -42,9 +42,12 @@ float ge_rad=3.141;
 static byte pidsScreen1[2] = {PID_SPEED, PID_RPM};
 static byte pidsScreen2[2] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP};
 static byte pidsScreen3[2] = {PID_FUEL_LEVEL, PID_ENGINE_TORQUE_PERCENTAGE};
+int valuesScreen1[sizeof(pidsScreen1)] = {};
+int valuesScreen2[sizeof(pidsScreen2)] = {};
+int valuesScreen3[sizeof(pidsScreen3)] = {};
 
 //Define the screen pages
-int number_of_screens = 2;
+int number_of_screens = 3;
 
 
 // Define the bitmap
@@ -180,7 +183,6 @@ u8g2.print(value);*/
 void DrawScreen(int thescreen) {
   switch (thescreen) {
     case 0: {
-        int valuesScreen1[sizeof(pidsScreen1)] = {};
         if(obd.readPID(pidsScreen1, sizeof(pidsScreen1), valuesScreen1) == sizeof(pidsScreen1)) {
           // Draw gauge
           float i = ((valuesScreen1[1] - 0) * (ge_rad - gs_rad) / (maxVal - minVal) + gs_rad);
@@ -203,7 +205,6 @@ void DrawScreen(int thescreen) {
       break;
     }
     case 1: {
-        int valuesScreen2[sizeof(pidsScreen2)] = {};
         // we weten welke pids we gaan ophalen
         if(obd.readPID(pidsScreen2, sizeof(pidsScreen2), valuesScreen2) == sizeof(pidsScreen2)) {
           u8g2.firstPage();
@@ -220,7 +221,6 @@ void DrawScreen(int thescreen) {
       break;
     }
     case 2: {
-        int valuesScreen3[sizeof(pidsScreen3)] = {};
         // we weten welke pids we gaan ophalen
         if(obd.readPID(pidsScreen3, sizeof(pidsScreen3), valuesScreen3) == sizeof(pidsScreen3)) {
           u8g2.firstPage();
