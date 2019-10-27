@@ -41,7 +41,7 @@ float ge_rad=3.141;
 //const PROGMEM byte pidsScreen1[2] = {PID_SPEED, PID_RPM}; // pids screen #1
 static byte pidsScreen1[2] = {PID_SPEED, PID_RPM};
 static byte pidsScreen2[2] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP};
-static byte pidsScreen3[2] = {PID_FUEL_LEVEL, PID_ENGINE_TORQUE_PERCENTAGE};
+static byte pidsScreen3[1] = {PID_ENGINE_TORQUE_PERCENTAGE};
 int valuesScreen1[sizeof(pidsScreen1)] = {};
 int valuesScreen2[sizeof(pidsScreen2)] = {};
 int valuesScreen3[sizeof(pidsScreen3)] = {};
@@ -230,8 +230,8 @@ void DrawScreen(int thescreen) {
             u8g2.drawStr(0, 10, "Torque");
             u8g2.setCursor(100, 10);
             u8g2.print(valuesScreen3[0]);
-            u8g2.setCursor(100, 30);
-            u8g2.print(valuesScreen3[1]);
+            //u8g2.setCursor(100, 30);
+            //u8g2.print(valuesScreen3[1]);
             } while (u8g2.nextPage());
         }
       break;
