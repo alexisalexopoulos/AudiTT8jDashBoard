@@ -199,6 +199,8 @@ void DrawScreen(int thescreen) {
           u8g2.print((unsigned int)valuesScreen1[0] % 1000);
           u8g2.setCursor(100, 30);
           u8g2.print((unsigned int)valuesScreen1[1] % 10000);
+          // light on LED when RPM exceeds 3000
+          digitalWrite(ledPin, valuesScreen1[1] > 4000 ? HIGH : LOW);
         }
         else {
           u8g2.setFont(u8g2_font_profont15_mf);
