@@ -15,7 +15,7 @@ COBD obd;
 #endif
 
 //Set parameters for the screen
-U8G2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
 //Define button and LED NANO
 //const int  buttonPin = 2;    // the pin that the pushbutton is attached to
@@ -138,20 +138,20 @@ void reconnect()
   //Turn on Led
   digitalWrite(ledPin, HIGH);
   //Print "Reconnecting"
-  u8g2.firstPage();
-    do {
-      u8g2.setFont(u8g2_font_roentgen_nbp_t_all);
-      u8g2.drawStr(0,15,"Reconnecting");
-    } while ( u8g2.nextPage() );
-      delay(1000);
-  //digitalWrite(SD_CS_PIN, LOW);
+  u8g2.clearBuffer();
+  u8g2.setFont(u8g2_font_roentgen_nbp_t_all);
+  u8g2.drawStr(0,15,"Reconnecting");
+  u8g2.sendBuffer();
+  delay(1000);
+  //Loop for OBD INIT to become true
   for (uint16_t i = 0; !obd.init(); i++) {
     if (i == 5) {
       //Turn off Led
       digitalWrite(ledPin, LOW);
+      //Clear Screen
       u8g2.clear();
     }
-    delay(3000);
+  delay(3000);
   }
 }
 
@@ -189,19 +189,24 @@ void DrawScreen(int thescreen) {
           float i = ((valuesScreen1[1] - 0) * (ge_rad - gs_rad) / (maxVal - minVal) + gs_rad);
           int xp = centerx + (sin(i) * n);
           int yp = centery - (cos(i) * n);
-          u8g2.firstPage();
-          do {
-            u8g2.drawCircle(centerx, centery, radius, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_LOWER_RIGHT);
-            u8g2.drawLine(centerx, centery, xp, yp);
-            // we weten welke pids we gaan ophalen
-            u8g2.setFont(u8g2_font_profont15_mf);
-            u8g2.drawStr(64, 10, "speed");
-            u8g2.drawStr(64, 30, "RPM");
-            u8g2.setCursor(100, 10);
-            u8g2.print((unsigned int)valuesScreen1[0] % 1000);
-            u8g2.setCursor(100, 30);
-            u8g2.print((unsigned int)valuesScreen1[1] % 10000);
-            } while (u8g2.nextPage());
+          u8g2.clearBuffer();
+          u8g2.drawCircle(centerx, centery, radius, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_LOWER_RIGHT);
+          u8g2.drawLine(centerx, centery, xp, yp);
+          // we weten welke pids we gaan ophalen
+          u8g2.setFont(u8g2_font_profont15_mf);
+          u8g2.drawStr(64, 10, "speed");
+          u8g2.drawStr(64, 30, "RPM");
+          u8g2.setCursor(100, 10);
+          u8g2.print((unsigned int)valuesScreen1[0] % 1000);
+          u8g2.setCursor(100, 30);
+          u8g2.print((unsigned int)valuesScreen1[1] % 10000);
+          u8g2.sendBuffer();
+        }
+        else {
+          u8g2.clearBuffer();
+          u8g2.setFont(u8g2_font_profont15_mf);
+          u8g2.drawStr(64,32, "ERROR");
+          u8g2.sendBuffer();
         }
       break;
     }
@@ -210,16 +215,21 @@ void DrawScreen(int thescreen) {
       int valuesScreen2[sizeof(pidsScreen2)];
         // we weten welke pids we gaan ophalen
         if(obd.readPID(pidsScreen2, sizeof(pidsScreen2), valuesScreen2) == sizeof(pidsScreen2)) {
-          u8g2.firstPage();
-          do {
-            u8g2.setFont(u8g2_font_profont15_mf);
-            u8g2.drawStr(0, 10, "Coolant temp");
-            u8g2.drawStr(0, 30, "Intake temp");
-            u8g2.setCursor(100, 10);
-            u8g2.print(valuesScreen2[0]);
-            u8g2.setCursor(100, 30);
-            u8g2.print(valuesScreen2[1]);
-            } while (u8g2.nextPage());
+          u8g2.clearBuffer();
+          u8g2.setFont(u8g2_font_profont15_mf);
+          u8g2.drawStr(0, 10, "Coolant temp");
+          u8g2.drawStr(0, 30, "Intake temp");
+          u8g2.setCursor(100, 10);
+          u8g2.print(valuesScreen2[0]);
+          u8g2.setCursor(100, 30);
+          u8g2.print(valuesScreen2[1]);
+          u8g2.sendBuffer();
+        }
+        else {
+          u8g2.clearBuffer();
+          u8g2.setFont(u8g2_font_profont15_mf);
+          u8g2.drawStr(64,32, "ERROR");
+          u8g2.sendBuffer();
         }
       break;
     }
@@ -228,23 +238,21 @@ void DrawScreen(int thescreen) {
       int valuesScreen3[sizeof(pidsScreen3)];
         // we weten welke pids we gaan ophalen
         if(obd.readPID(pidsScreen3, sizeof(pidsScreen3), valuesScreen3) == sizeof(pidsScreen3)) {
-          u8g2.firstPage();
-          do {
-            u8g2.setFont(u8g2_font_profont15_mf);
-            //u8g2.drawStr(0, 10, "Fuel");
-            u8g2.drawStr(0, 10, "Throttle");
-            u8g2.setCursor(100, 10);
-            u8g2.print(valuesScreen3[0]);
-            //u8g2.setCursor(100, 30);
-            //u8g2.print(valuesScreen3[1]);
-            } while (u8g2.nextPage());
+          u8g2.clearBuffer();
+          u8g2.setFont(u8g2_font_profont15_mf);
+          //u8g2.drawStr(0, 10, "Fuel");
+          u8g2.drawStr(0, 10, "Throttle");
+          u8g2.setCursor(100, 10);
+          u8g2.print(valuesScreen3[0]);
+          //u8g2.setCursor(100, 30);
+          //u8g2.print(valuesScreen3[1]);
+          u8g2.sendBuffer();
         }
         else{
-          u8g2.firstPage();
-          do {
-            u8g2.setFont(u8g2_font_profont15_mf);
-            u8g2.drawStr(64,32, "ERROR");
-            } while (u8g2.nextPage());
+          u8g2.clearBuffer();
+          u8g2.setFont(u8g2_font_profont15_mf);
+          u8g2.drawStr(64,32, "ERROR");
+          u8g2.sendBuffer();
         }
       break;
     }
@@ -291,7 +299,7 @@ void loop()
       currentScreen++;
       currentScreen = currentScreen % number_of_screens;
       // Delay a little bit to avoid bouncing
-      delay(100);
+      delay(50);
       u8g2.clear();
     }
   }
