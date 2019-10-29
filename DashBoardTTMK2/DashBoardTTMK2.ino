@@ -17,34 +17,18 @@ COBD obd;
 //Set parameters for the screen
 U8G2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
-//Define button and LED
-const int  buttonPin = 2;    // the pin that the pushbutton is attached to
-const int ledPin = 12;       // the pin that the LED is attached to
+//Define button and LED NANO
+//const int  buttonPin = 2;    // the pin that the pushbutton is attached to
+//const int ledPin = 12;       // the pin that the LED is attached to
+
+//Define button and LED STM32
+const int  buttonPin = PB3;    // the pin that the pushbutton is attached to
+const int ledPin = PB1;       // the pin that the LED is attached to
 
 // Define vars for screen rotation
 int currentScreen = 0;   // counter for the number of button presses
 int buttonState = 0;         // current state of the button
 int lastButtonState = 0;     // previous state of the button
-
-//Define vars for gauge on first page
-byte centerx=30; //x center
-byte centery=32; //y center
-byte radius=30; //radius
-byte percent=90; //needle percent
-int minVal = 0;
-int maxVal = 8000;
-int n=(radius/100.00)*percent;
-float gs_rad=-1.572;
-float ge_rad=3.141;
-
-//Define Pid arrays
-//const PROGMEM byte pidsScreen1[2] = {PID_SPEED, PID_RPM}; // pids screen #1
-static byte pidsScreen1[2] = {PID_SPEED, PID_RPM};
-static byte pidsScreen2[2] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP};
-static byte pidsScreen3[1] = {PID_ENGINE_TORQUE_PERCENTAGE};
-int valuesScreen1[sizeof(pidsScreen1)] = {};
-int valuesScreen2[sizeof(pidsScreen2)] = {};
-int valuesScreen3[sizeof(pidsScreen3)] = {};
 
 //Define the screen pages
 int number_of_screens = 3;
@@ -171,7 +155,12 @@ void reconnect()
   }
 }
 
-
+//function to check SRAM
+int freeRam () {
+  extern int __heap_start, *__brkval;
+  int v;
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+}
 
 /*Text block for vars
 u8g2.setFont(u8g2_font_roentgen_nbp_tr);
@@ -183,6 +172,18 @@ u8g2.print(value);*/
 void DrawScreen(int thescreen) {
   switch (thescreen) {
     case 0: {
+        static byte pidsScreen1[2] = {PID_SPEED, PID_RPM};
+        int valuesScreen1[sizeof(pidsScreen1)];
+        //Define vars for gauge on first page
+        byte centerx=30; //x center
+        byte centery=32; //y center
+        byte radius=30; //radius
+        byte percent=90; //needle percent
+        int minVal = 0;
+        int maxVal = 8000;
+        int n=(radius/100.00)*percent;
+        float gs_rad=-1.572;
+        float ge_rad=3.141;
         if(obd.readPID(pidsScreen1, sizeof(pidsScreen1), valuesScreen1) == sizeof(pidsScreen1)) {
           // Draw gauge
           float i = ((valuesScreen1[1] - 0) * (ge_rad - gs_rad) / (maxVal - minVal) + gs_rad);
@@ -205,6 +206,8 @@ void DrawScreen(int thescreen) {
       break;
     }
     case 1: {
+      static byte pidsScreen2[2] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP};
+      int valuesScreen2[sizeof(pidsScreen2)];
         // we weten welke pids we gaan ophalen
         if(obd.readPID(pidsScreen2, sizeof(pidsScreen2), valuesScreen2) == sizeof(pidsScreen2)) {
           u8g2.firstPage();
@@ -221,97 +224,32 @@ void DrawScreen(int thescreen) {
       break;
     }
     case 2: {
+      byte pidsScreen3[1] = {PID_THROTTLE};
+      int valuesScreen3[sizeof(pidsScreen3)];
         // we weten welke pids we gaan ophalen
         if(obd.readPID(pidsScreen3, sizeof(pidsScreen3), valuesScreen3) == sizeof(pidsScreen3)) {
           u8g2.firstPage();
           do {
             u8g2.setFont(u8g2_font_profont15_mf);
-            u8g2.drawStr(0, 10, "Fuel");
-            u8g2.drawStr(0, 10, "Torque");
+            //u8g2.drawStr(0, 10, "Fuel");
+            u8g2.drawStr(0, 10, "Throttle");
             u8g2.setCursor(100, 10);
             u8g2.print(valuesScreen3[0]);
             //u8g2.setCursor(100, 30);
             //u8g2.print(valuesScreen3[1]);
             } while (u8g2.nextPage());
         }
+        else{
+          u8g2.firstPage();
+          do {
+            u8g2.setFont(u8g2_font_profont15_mf);
+            u8g2.drawStr(64,32, "ERROR");
+            } while (u8g2.nextPage());
+        }
       break;
     }
   }
 }
-
-//Draw the screen with static values
-void DrawScreenStatic(int thescreen) {
-  switch (thescreen) {
-    case 0: {
-      u8g2.firstPage();
-      do {
-        static byte pids[2] = {PID_SPEED, PID_RPM};
-        int valuesStatic[sizeof(pids)] = {};
-        valuesStatic[0] = 15;
-        valuesStatic[1] = 25;
-        // teken heel scherm 1 - je hebt 2 values :)
-        float i = ((valuesStatic[1] - 0) * (ge_rad - gs_rad) / (maxVal - minVal) + gs_rad);
-        int xp = centerx + (sin(i) * n);
-        int yp = centery - (cos(i) * n);
-        u8g2.drawCircle(centerx, centery, radius, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_LOWER_RIGHT);
-        u8g2.drawLine(centerx, centery, xp, yp);
-        u8g2.setFont(u8g2_font_profont17_mf);
-        u8g2.drawStr(0, 60, "speed");
-        u8g2.setCursor(45, 55);
-        u8g2.print((unsigned int)valuesStatic[0] % 1000);
-        u8g2.drawStr(32, 20, "RPM");
-        u8g2.setCursor(32, 40);
-        u8g2.print((unsigned int)valuesStatic[1] % 10000);
-      } while (u8g2.nextPage());
-      break;
-    }
-    case 1: {
-      u8g2.firstPage();
-      do {
-        static byte pids1[2] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP};
-        int valuesStatic1[sizeof(pids1)] = {};
-        valuesStatic1[0] = 55;
-        valuesStatic1[1] = 60;
-        // we weten welke pids we gaan ophalen
-        u8g2.drawStr(0, 20, "Coolant temp");
-        u8g2.drawStr(0, 40, "Intake temp");
-        u8g2.setFont(u8g2_font_profont17_mf);
-        u8g2.setCursor(50, 20);
-        u8g2.print(valuesStatic1[0]);
-        u8g2.setCursor(50, 40);
-        u8g2.print(valuesStatic1[1]);
-        u8g2.setFont(u8g2_font_profont17_mf);
-        u8g2.drawStr(0, 60, "speed");
-        u8g2.setCursor(45, 55);
-        u8g2.print((unsigned int)valuesStatic1[0] % 1000);
-        u8g2.drawStr(32, 20, "RPM");
-        u8g2.setCursor(32, 40);
-        u8g2.print((unsigned int)valuesStatic1[1] % 10000);
-      } while (u8g2.nextPage());
-      break;
-    }
-    case 2: {
-      u8g2.firstPage();
-      do {
-        static byte pids2[3] = {PID_FUEL_LEVEL, PID_ENGINE_TORQUE_PERCENTAGE};
-        int valuesStatic2[sizeof(pids2)] = {};
-        valuesStatic2[0] = 10;
-        valuesStatic2[1] = 100;
-        // we weten welke pids we gaan ophalen
-        //u8g2.setFont(u8g2_font_profont17_mf);
-        u8g2.drawStr(0, 20, "Fuel");
-        u8g2.setCursor(50, 20);
-        u8g2.print(valuesStatic2[0]);
-        u8g2.drawStr(0, 40, "Torque");
-        u8g2.setCursor(50, 40);
-        u8g2.print(valuesStatic2[1]);
-      } while (u8g2.nextPage());
-      break;
-    }
-  }
-}
-
-
 
 void setup()
 {
