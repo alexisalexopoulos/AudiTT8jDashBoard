@@ -149,9 +149,9 @@ void reconnect()
     if (i == 5) {
       //Turn off Led
       digitalWrite(ledPin, LOW);
-      delay(3000);
       u8g2.clear();
     }
+    delay(3000);
   }
 }
 
