@@ -189,7 +189,6 @@ void DrawScreen(int thescreen) {
           float i = ((valuesScreen1[1] - 0) * (ge_rad - gs_rad) / (maxVal - minVal) + gs_rad);
           int xp = centerx + (sin(i) * n);
           int yp = centery - (cos(i) * n);
-          u8g2.clearBuffer();
           u8g2.drawCircle(centerx, centery, radius, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_LOWER_RIGHT);
           u8g2.drawLine(centerx, centery, xp, yp);
           // we weten welke pids we gaan ophalen
@@ -200,13 +199,10 @@ void DrawScreen(int thescreen) {
           u8g2.print((unsigned int)valuesScreen1[0] % 1000);
           u8g2.setCursor(100, 30);
           u8g2.print((unsigned int)valuesScreen1[1] % 10000);
-          u8g2.sendBuffer();
         }
         else {
-          u8g2.clearBuffer();
           u8g2.setFont(u8g2_font_profont15_mf);
           u8g2.drawStr(64,32, "ERROR");
-          u8g2.sendBuffer();
         }
       break;
     }
@@ -215,7 +211,6 @@ void DrawScreen(int thescreen) {
       int valuesScreen2[sizeof(pidsScreen2)];
         // we weten welke pids we gaan ophalen
         if(obd.readPID(pidsScreen2, sizeof(pidsScreen2), valuesScreen2) == sizeof(pidsScreen2)) {
-          u8g2.clearBuffer();
           u8g2.setFont(u8g2_font_profont15_mf);
           u8g2.drawStr(0, 10, "Coolant temp");
           u8g2.drawStr(0, 30, "Intake temp");
@@ -223,13 +218,10 @@ void DrawScreen(int thescreen) {
           u8g2.print(valuesScreen2[0]);
           u8g2.setCursor(100, 30);
           u8g2.print(valuesScreen2[1]);
-          u8g2.sendBuffer();
         }
         else {
-          u8g2.clearBuffer();
           u8g2.setFont(u8g2_font_profont15_mf);
           u8g2.drawStr(64,32, "ERROR");
-          u8g2.sendBuffer();
         }
       break;
     }
@@ -238,7 +230,6 @@ void DrawScreen(int thescreen) {
       int valuesScreen3[sizeof(pidsScreen3)];
         // we weten welke pids we gaan ophalen
         if(obd.readPID(pidsScreen3, sizeof(pidsScreen3), valuesScreen3) == sizeof(pidsScreen3)) {
-          u8g2.clearBuffer();
           u8g2.setFont(u8g2_font_profont15_mf);
           //u8g2.drawStr(0, 10, "Fuel");
           u8g2.drawStr(0, 10, "Throttle");
@@ -246,13 +237,10 @@ void DrawScreen(int thescreen) {
           u8g2.print(valuesScreen3[0]);
           //u8g2.setCursor(100, 30);
           //u8g2.print(valuesScreen3[1]);
-          u8g2.sendBuffer();
         }
         else{
-          u8g2.clearBuffer();
           u8g2.setFont(u8g2_font_profont15_mf);
           u8g2.drawStr(64,32, "ERROR");
-          u8g2.sendBuffer();
         }
       break;
     }
@@ -271,10 +259,9 @@ void setup()
   //Turn on Led
   digitalWrite(ledPin, HIGH);
   // Drawing the splash screen
-  u8g2.firstPage();
-    do {
-        drawSplash();
-    } while( u8g2.nextPage() );
+  u8g2.clearBuffer();
+  drawSplash();
+  u8g2.sendBuffer();
   delay(2000);
  //Connect to OBD
   while (!obd.init());
@@ -307,7 +294,9 @@ void loop()
   lastButtonState = buttonState;
 
   //Draw the screens
+  u8g2.clearBuffer();
   DrawScreen(currentScreen);
+  u8g2.sendBuffer();
 
 //Reconnect if no connection
   if (obd.errors >= 2) {
