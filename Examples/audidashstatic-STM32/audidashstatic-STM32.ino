@@ -30,17 +30,21 @@ int currentScreen = 0;   // counter for the number of button presses
 int buttonState = 0;         // current state of the button
 int lastButtonState = 0;     // previous state of the button
 
-//Define vars for gauge on first page
-byte centerx=32; //x center
-byte centery=36; //y center
+
+//Define common Gauge parameters
 byte radius=23; //radius
 byte percent=120; //needle percent
-int minVal = 0;
-int maxVal = 100;
+//Define parameters for left Gauge
+byte Leftcenterx=32; //x center
+byte Leftcentery=36; //y center
 int n=(radius/100.00)*percent;
-float gs_rad=1.572;
-float ge_rad=4.887;
-
+float Leftgs_rad=1.572;
+float Leftge_rad=4.887;
+//Define parameters for the Right Gauge
+byte Rightcenterx=97; //x center
+byte Rightcentery=36; //y center
+float Rightgs_rad=4.712;
+float Rightge_rad=1.396;
 
 
 //Define the screen pages
@@ -139,9 +143,9 @@ static const unsigned char Audi_splash2_bits[] PROGMEM = {
    0x03, 0x00, 0x00, 0x00 };
 
 //define screen1 bitmap
-#define screen1bmp_width 128
-#define screen1bmp_height 64
-static unsigned char screen1bmp[] = {
+#define gaugebmp_width 128
+#define gaugebmp_height 64
+static unsigned char gaugebmp[] = {
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -231,9 +235,9 @@ static unsigned char screen1bmp[] = {
 
 
 //Function to draw the bitmap
-void drawScreen1() {
+void drawGauge() {
  // graphic commands to redraw the complete screen should be placed here
-  u8g2.drawXBMP( 0, 0, screen1bmp_width, screen1bmp_height , screen1bmp);
+  u8g2.drawXBMP( 0, 0, gaugebmp_width, gaugebmp_height , gaugebmp);
 }
 
 //Function to draw the bitmap
@@ -274,18 +278,28 @@ u8g2.print(value);*/
 void DrawScreenStatic(int thescreen) {
   switch (thescreen) {
           case 0: {
-        drawScreen1();
-        u8g2.setFont(u8g2_font_profont12_mf);
+        drawGauge();
+        //Get the PIDS
         byte pids[2] = {PID_SPEED, PID_RPM};
-        int valuesStatic[sizeof(pids)] = {}; 
-        valuesStatic[0] = 100;
-        valuesStatic[1] = 100;
-        // teken heel scherm 1 - je hebt 2 values :)
-        float i = ((valuesStatic[1] - 0) * (ge_rad - gs_rad) / (maxVal - minVal) + gs_rad);
-        int xp = centerx + (sin(i) * n);
-        int yp = centery - (cos(i) * n);
-        //u8g2.drawCircle(centerx, centery, radius, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT | U8G2_DRAW_LOWER_RIGHT);
-        u8g2.drawLine(centerx, centery, xp, yp);
+        int valuesStatic[sizeof(pids)] = {};
+        valuesStatic[0] = 75;
+        valuesStatic[1] = 15;
+        //parameters for Left Gauge on screen #1
+        int LeftminVal = 0;
+        int LeftmaxVal = 100;
+        //Parameters for Right Gauge on Screen #1
+        int RightminVal = 0;
+        int RightmaxVal = 100;
+        // Draw Left Gauge
+        float Lefti = ((valuesStatic[1] - 0) * (Leftge_rad - Leftgs_rad) / (LeftmaxVal - LeftminVal) + Leftgs_rad);
+        int Leftxp = Leftcenterx + (sin(Lefti) * n);
+        int Leftyp = Leftcentery - (cos(Lefti) * n);
+        u8g2.drawLine(Leftcenterx, Leftcentery, Leftxp, Leftyp);
+        //Draw Right Gauge
+        float Righti = ((valuesStatic[1] - 0) * (Rightge_rad - Rightgs_rad) / (RightmaxVal - RightminVal) + Rightgs_rad);
+        int Rightxp = Rightcenterx + (sin(Righti) * n);
+        int Rightyp = Rightcentery - (cos(Righti) * n);
+        u8g2.drawLine(Rightcenterx, Rightcentery, Rightxp, Rightyp);
         u8g2.setFont(u8g2_font_profont12_mf);
         u8g2.drawStr(4, 14, "SPEED");
         u8g2.setCursor(37, 31);
