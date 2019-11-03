@@ -113,6 +113,7 @@ private:
                 startTime = lastSpeedTime;
                 lastSpeed = 0;
                 distance = 0;
+                //Clear Array
                 memset(times, 0, sizeof(times));
                 initTimerScreen();
             }

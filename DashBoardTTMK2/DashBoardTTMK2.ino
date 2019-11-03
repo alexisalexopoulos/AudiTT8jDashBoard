@@ -307,7 +307,7 @@ void DrawScreen(int thescreen) {
           //Print values and text on screen
           u8g2.setFont(u8g2_font_profont12_mf);
           u8g2.drawStr(4, 14, "RPM");
-          u8g2.setCursor(37, 31);
+          u8g2.setCursor(35, 31);
           u8g2.print((unsigned int)valuesScreen1[0] % 10000);
           u8g2.drawStr(69, 14, "SPEED");
           u8g2.setCursor(74, 31);
@@ -360,17 +360,36 @@ void DrawScreen(int thescreen) {
       break;
     }
     case 2: {
-      byte pidsScreen3[1] = {PID_THROTTLE};
+      byte pidsScreen3[1] = {PID_FUEL_PRESSURE,PID_FUEL_LEVEL};
       int valuesScreen3[sizeof(pidsScreen3)];
+      //Draw the bitmap
+      drawGauge();
+      //parameters for Left Gauge on screen #1
+      int LeftminValSCR3 = 0;
+      int LeftmaxValSCR3 = 800;
+      //parameters for Left Gauge on screen #1
+      int RightminValSCR3 = 0;
+      int RightmaxValSCR3 = 100;
         // we weten welke pids we gaan ophalen
         if(obd.readPID(pidsScreen3, sizeof(pidsScreen3), valuesScreen3) == sizeof(pidsScreen3)) {
-          u8g2.setFont(u8g2_font_profont15_mf);
-          //u8g2.drawStr(0, 10, "Fuel");
-          u8g2.drawStr(0, 10, "Throttle");
-          u8g2.setCursor(100, 10);
+          // Draw Left Gauge
+          float LeftiSCR3 = ((valuesScreen3[0] - 0) * (Leftge_rad - Leftgs_rad) / (LeftmaxValSCR3 - LeftminValSCR3) + Leftgs_rad);
+          int LeftxpSCR3 = Leftcenterx + (sin(LeftiSCR3) * n);
+          int LeftypSCR3 = Leftcentery - (cos(LeftiSCR3) * n);
+          u8g2.drawLine(Leftcenterx, Leftcentery, LeftxpSCR3, LeftypSCR3);
+          //Draw Right Gauge
+          float RightiSCR3 = ((valuesScreen3[1] - 0) * (Rightge_rad - Rightgs_rad) / (RightmaxValSCR3 - RightminValSCR3) + Rightgs_rad);
+          int RightxpSCR3 = Rightcenterx + (sin(RightiSCR3) * n);
+          int RightypSCR3 = Rightcentery - (cos(RightiSCR3) * n);
+          u8g2.drawLine(Rightcenterx, Rightcentery, RightxpSCR3, RightypSCR3);
+          //Print values and text on screen
+          u8g2.setFont(u8g2_font_profont12_mf);
+          u8g2.drawStr(4, 14, "FUEL PRS");
+          u8g2.setCursor(37, 31);
           u8g2.print(valuesScreen3[0]);
-          //u8g2.setCursor(100, 30);
-          //u8g2.print(valuesScreen3[1]);
+          u8g2.drawStr(69, 14, "FUEL LVL");
+          u8g2.setCursor(74, 31);
+          u8g2.print(valuesScreen3[1]);
         }
         else{
           u8g2.setFont(u8g2_font_profont15_mf);
