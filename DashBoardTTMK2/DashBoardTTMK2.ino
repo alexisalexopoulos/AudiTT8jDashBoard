@@ -360,7 +360,7 @@ void DrawScreen(int thescreen) {
       break;
     }
     case 2: {
-      byte pidsScreen3[1] = {PID_FUEL_PRESSURE,PID_FUEL_LEVEL};
+      byte pidsScreen3[2] = {PID_FUEL_PRESSURE,PID_FUEL_LEVEL};
       int valuesScreen3[sizeof(pidsScreen3)];
       //Draw the bitmap
       drawGauge();
