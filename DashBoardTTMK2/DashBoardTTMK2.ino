@@ -360,7 +360,7 @@ void DrawScreen(int thescreen) {
       break;
     }
     case 2: {
-      byte pidsScreen3[2] = {PID_FUEL_PRESSURE,PID_FUEL_LEVEL};
+      byte pidsScreen3[2] = {PID_BAROMETRIC,PID_CATALYST_TEMP_B1S1};
       int valuesScreen3[sizeof(pidsScreen3)];
       //Draw the bitmap
       drawGauge();
@@ -384,10 +384,10 @@ void DrawScreen(int thescreen) {
           u8g2.drawLine(Rightcenterx, Rightcentery, RightxpSCR3, RightypSCR3);
           //Print values and text on screen
           u8g2.setFont(u8g2_font_profont12_mf);
-          u8g2.drawStr(4, 14, "FUEL PRS");
+          u8g2.drawStr(4, 14, "BAR");
           u8g2.setCursor(37, 31);
           u8g2.print(valuesScreen3[0]);
-          u8g2.drawStr(69, 14, "FUEL LVL");
+          u8g2.drawStr(69, 14, "CAT TEMP");
           u8g2.setCursor(74, 31);
           u8g2.print(valuesScreen3[1]);
         }
