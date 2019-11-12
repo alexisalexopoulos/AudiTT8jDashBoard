@@ -266,12 +266,6 @@ void reconnect()
   }
 }
 
-//function to check SRAM
-int freeRam () {
-  extern int __heap_start, *__brkval;
-  int v;
-  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
-}
 
 /*Text block for vars
 u8g2.setFont(u8g2_font_roentgen_nbp_tr);
