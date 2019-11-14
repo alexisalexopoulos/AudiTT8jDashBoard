@@ -526,10 +526,9 @@ void DrawScreenStatic(int thescreen) {
         u8g2.print(AcX);
         u8g2.setCursor(103, 34);
         u8g2.print(AcY);
-        int xpos = (AcX*4)+33;
-        int ypos = (AcY*4)+32;
+        int xpos = (AcX*2)+33;
+        int ypos = (AcY*2)+32;
         u8g2.drawStr(xpos,ypos,"O");
-        delay(333);
       break;
     }
     case 1: {
