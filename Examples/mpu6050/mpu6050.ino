@@ -35,7 +35,7 @@ void setup() {
   delay(20);
   */
   // Call this function if you need to get the IMU error values for your module
-  calculate_IMU_error();
+  //calculate_IMU_error();
   delay(20);
 
 }
