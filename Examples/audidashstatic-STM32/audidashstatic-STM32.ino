@@ -331,7 +331,7 @@ static const unsigned char G_HBars_bits[] PROGMEM = {
 
 #define BarGraph_width 128
 #define BarGraph_height 64
-static unsigned char BarGraph_bits[] = {
+static unsigned char BarGraph_bits PROGMEM =[] {
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x00, 0x00,
@@ -496,20 +496,20 @@ void DrawScreenStatic(int thescreen) {
         valuesStatic[0] = 75;
         valuesStatic[1] = 15;
         valuesStatic[2] = 1;
-        //print Text
+        //print Static Text
         u8g2.setFont(u8g2_font_profont10_mf);
         u8g2.drawStr(65, 12, "SPEED");
         u8g2.drawStr(65, 30, "RPM");
         u8g2.drawStr(65, 49, "GFORCE");
         //SPEED
         u8g2.setFont(u8g2_font_profont15_mf);
-        u8g2.setCursor(103, 14);
+        u8g2.setCursor(101, 14);
         u8g2.print((unsigned int)valuesStatic[0] % 1000);
         //RPM
-        u8g2.setCursor(103, 33);
+        u8g2.setCursor(101, 33);
         u8g2.print((unsigned int)valuesStatic[1] % 10000);
         //GFORCE
-        u8g2.setCursor(103, 52);
+        u8g2.setCursor(101, 52);
         u8g2.print((unsigned int)valuesStatic[1] % 10000);
         //metrics
         Wire.beginTransmission(MPU_addr);
@@ -540,34 +540,41 @@ void DrawScreenStatic(int thescreen) {
     case 1: {
         byte pids1[2] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP};
         int valuesStatic1[sizeof(pids1)] = {};
-        valuesStatic1[0] = 119;
-        valuesStatic1[1] = 321;
-        //Draw progress Bars
-        //drawbars ();
+        valuesStatic1[0] = 12;
+        valuesStatic1[1] = 1210;
+        int torque = 1000;
+        //DrawBitMap
         drawBitmap(BarGraph_bits);
-        //int pbarx = 5;
-        //int pbary = 10;
+        //Draw progress Bars
         int pbarwidth = 120;
-        int pbarheight = 8;
-        drawProgressbar(5,14,pbarwidth,pbarheight,valuesStatic1[0], 120);
-        drawProgressbar(5,33,pbarwidth,pbarheight,valuesStatic1[1], 1000);
-        drawProgressbar(5,52,pbarwidth,pbarheight,valuesStatic1[1], 1000);
+        int pbarheight = 9;
+        drawProgressbar(5,15,pbarwidth,pbarheight,valuesStatic1[0], 2000);
+        drawProgressbar(5,34,pbarwidth,pbarheight,valuesStatic1[1], 2000);
+        drawProgressbar(5,53,pbarwidth,pbarheight,valuesStatic1[1], 2000);
         // Draw text
         u8g2.setFont(u8g2_font_trixel_square_tf); //5 pixel height
         u8g2.drawStr(5, 13, "COOLANT");
         u8g2.drawStr(5, 32, "INTAKE");
         u8g2.drawStr(5, 51, "BAR");
-        u8g2.drawStr(65, 8, "TORQUE");
-        //Draw bar scale
-        //u8g2.drawStr(14, 28, "0");
-        //u8g2.drawStr(114, 28, "120");
-        //Draw bar scale
-        //u8g2.drawStr(10, 58, "-20");
-        //u8g2.drawStr(114, 58, "100");
-        /*u8g2.setFont(u8g2_font_profont17_mf);
-        u8g2.setCursor(50, 20);
+        u8g2.drawStr(65, 7, "TORQUE");
+        //coolant
+        u8g2.setCursor(110, 13);
         u8g2.print(valuesStatic1[0]);
-        u8g2.setCursor(50, 40);
+        //intake
+        u8g2.setCursor(110, 32);
+        u8g2.print(valuesStatic1[1]);
+        //bar
+        u8g2.setCursor(110, 51);
+        u8g2.print(valuesStatic1[1]);
+        //torque
+        u8g2.setCursor(110,7);
+        u8g2.print(torque);
+        //u8g2.setFont(u8g2_font_trixel_square_tf); //4px
+        u8g2.drawStr(35, 13, "(c)");
+        u8g2.drawStr(35, 32, "(c)");
+        u8g2.drawStr(35, 51, "(kPa)");
+        u8g2.drawStr(95, 7, "(%)");
+        /*
         u8g2.print(valuesStatic1[1]);
         u8g2.setFont(u8g2_font_profont17_mf);
         u8g2.drawStr(0, 60, "speed");
