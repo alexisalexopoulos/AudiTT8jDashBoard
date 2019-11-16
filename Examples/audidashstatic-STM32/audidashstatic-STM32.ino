@@ -17,9 +17,8 @@ COBD obd;
 //Set parameters for the screen
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
-//Define button and LED NONO
-//const int  buttonPin = 2;    // the pin that the pushbutton is attached to
-//const int ledPin = 12;       // the pin that the LED is attached to
+//Degree symbol
+const char DEGREE_SYMBOL[] = { 0xB0, '\0' };
 
 //MPU6050 vars
 const int MPU_addr=0x68;  // I2C address of the MPU-6050
@@ -331,7 +330,7 @@ static const unsigned char G_HBars_bits[] PROGMEM = {
 
 #define BarGraph_width 128
 #define BarGraph_height 64
-static unsigned char BarGraph_bits PROGMEM =[] {
+static const unsigned char BarGraph_bits [] = {
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x00, 0x00,
@@ -553,6 +552,7 @@ void DrawScreenStatic(int thescreen) {
         drawProgressbar(5,53,pbarwidth,pbarheight,valuesStatic1[1], 2000);
         // Draw text
         u8g2.setFont(u8g2_font_trixel_square_tf); //5 pixel height
+        //u8g2.setFont(u8g2_font_profont10_tf); //6 pixel height
         u8g2.drawStr(5, 13, "COOLANT");
         u8g2.drawStr(5, 32, "INTAKE");
         u8g2.drawStr(5, 51, "BAR");
@@ -571,6 +571,7 @@ void DrawScreenStatic(int thescreen) {
         u8g2.print(torque);
         //u8g2.setFont(u8g2_font_trixel_square_tf); //4px
         u8g2.drawStr(35, 13, "(c)");
+        u8g2.drawUTF8(37, 13, DEGREE_SYMBOL);
         u8g2.drawStr(35, 32, "(c)");
         u8g2.drawStr(35, 51, "(kPa)");
         u8g2.drawStr(95, 7, "(%)");
@@ -603,7 +604,7 @@ void DrawScreenStatic(int thescreen) {
         Wire.write(0x3B);  // starting with register 0x3B (ACCEL_XOUT_H)
         Wire.endTransmission(false);
         Wire.requestFrom(MPU_addr,6,true);  // request a total of 6 registers
-        //AcX=Wire.read()<<8|Wire.read();  // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)    
+        //AcX=Wire.read()<<8|Wire.read();  // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)
         //AcY=Wire.read()<<8|Wire.read();  // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
         //AcZ=Wire.read()<<8|Wire.read();  // 0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)
         AcX = (Wire.read() << 8 | Wire.read()) / 16384.0; // X-axis value
@@ -651,6 +652,7 @@ void setup()
   //Turn of ledPin
   digitalWrite(ledPin, LOW);
   //Clear screen and go to loop
+  u8g2.enableUTF8Print();
   u8g2.clear();
   //accelerometer data
   Serial.begin(9600);

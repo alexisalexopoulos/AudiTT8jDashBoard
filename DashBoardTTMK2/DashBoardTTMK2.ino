@@ -492,7 +492,7 @@ void DrawScreen(int thescreen) {
           u8g2.setCursor(103, 14);
           u8g2.print((unsigned int)valuesScreen1[0] % 1000);
           //RPM
-          u8g2.setCursor(103, 33);
+          u8g2.setCursor(100, 33);
           u8g2.print((unsigned int)valuesScreen1[1] % 10000);
           //GFORCE
           //u8g2.setCursor(103, 52);
@@ -507,7 +507,7 @@ void DrawScreen(int thescreen) {
       break;
     }
     case 1: {
-      static byte pidsScreen2[4] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP,PID_COMMANDED_EVAPORATIVE_PURGE,PID_ENGINE_LOAD};
+      static byte pidsScreen2[4] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP,PID_AMBIENT_TEMP,PID_ENGINE_LOAD};
       int valuesScreen2[sizeof(pidsScreen2)];
         //Draw bitmap
         drawBitmap(BarGraph_bits);
@@ -518,25 +518,25 @@ void DrawScreen(int thescreen) {
           int pbarheight = 9;
           drawProgressbar(5,15,pbarwidth,pbarheight,valuesScreen2[0], 130);
           drawProgressbar(5,34,pbarwidth,pbarheight,valuesScreen2[1], 100);
-          drawProgressbar(5,53,pbarwidth,pbarheight,valuesScreen2[2], 100);
+          drawProgressbar(5,53,pbarwidth,pbarheight,valuesScreen2[2], 60);
           // Draw text
           u8g2.setFont(u8g2_font_trixel_square_tf); //5 pixel height
           u8g2.drawStr(5, 13, "COOLANT");
           u8g2.drawStr(5, 32, "INTAKE");
-          u8g2.drawStr(5, 51, "CEP");
+          u8g2.drawStr(5, 51, "AMB TMP");
           u8g2.drawStr(65, 7, "LOAD");
           u8g2.setCursor(110, 13);
           u8g2.print(valuesScreen2[0]);             //Coolant temp
           u8g2.setCursor(110, 32);
           u8g2.print(valuesScreen2[1]);             //Intake temp
           u8g2.setCursor(110, 51);
-          u8g2.print(valuesScreen2[2]);             //Commanded evaporative purge
+          u8g2.print(valuesScreen2[2]);             //Ambient temp
           u8g2.setCursor(110,7);
           u8g2.print(valuesScreen2[3]);             //Engine load
           //Draw the symbols
           u8g2.drawStr(35, 13, "(c)");
           u8g2.drawStr(35, 32, "(c)");
-          u8g2.drawStr(35, 51, "(%)");
+          u8g2.drawStr(35, 51, "(c)");
           u8g2.drawStr(95, 7, "(%)");
         }
         else {
@@ -552,10 +552,10 @@ void DrawScreen(int thescreen) {
       drawBitmap(gaugebmp);
       //parameters for Left Gauge on screen #1
       int LeftminValSCR3 = 0;
-      int LeftmaxValSCR3 = 800;
+      int LeftmaxValSCR3 = 150;
       //parameters for Left Gauge on screen #1
       int RightminValSCR3 = 0;
-      int RightmaxValSCR3 = 100;
+      int RightmaxValSCR3 = 800;
         // we weten welke pids we gaan ophalen
         if(obd.readPID(pidsScreen3, sizeof(pidsScreen3), valuesScreen3) == sizeof(pidsScreen3)) {
           // Draw Left Gauge
@@ -602,19 +602,14 @@ void DrawScreen(int thescreen) {
           u8g2.drawStr(5, 32, "THROTTLE");
           u8g2.drawStr(5, 51, "BAR");
           u8g2.drawStr(65, 7, "DTC KM");
-          //coolant
           u8g2.setCursor(110, 13);
-          u8g2.print(valuesScreen4[0]);
-          //intake
+          u8g2.print(valuesScreen4[0]);       //MAF sensor
           u8g2.setCursor(110, 32);
-          u8g2.print(valuesScreen4[1]);
-          //bar
+          u8g2.print(valuesScreen4[1]);       //Throttle percentage
           u8g2.setCursor(110, 51);
-          u8g2.print(valuesScreen4[2]);
-          //torque
+          u8g2.print(valuesScreen4[2]);       //Barrometric pressure
           u8g2.setCursor(110,7);
-          u8g2.print(valuesScreen4[3]);
-          //u8g2.setFont(u8g2_font_trixel_square_tf); //4px
+          u8g2.print((unsigned int)valuesScreen4[3]);     //Number of warmups after dtc clear
           u8g2.drawStr(35, 13, "(gram/%)");
           u8g2.drawStr(35, 32, "(c)");
           u8g2.drawStr(35, 51, "(kPa)");
@@ -642,7 +637,7 @@ void setup()
   digitalWrite(ledPin, HIGH);
   // Drawing the splash screen
   u8g2.clearBuffer();
-  drawSplash();
+  drawBitmap(Audi_splash2_bits);
   u8g2.sendBuffer();
   delay(2000);
  //Connect to OBD
