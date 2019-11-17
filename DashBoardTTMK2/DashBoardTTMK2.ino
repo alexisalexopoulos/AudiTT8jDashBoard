@@ -621,6 +621,44 @@ void DrawScreen(int thescreen) {
         }
       break;
     }
+    case 4: {
+        byte pidsScreen4[4] = {PID_CATALYST_TEMP_B1S1,PID_CONTROL_MODULE_VOLTAGE,PID_BAROMETRIC,PID_WARMS_UPS};
+        int valuesScreen4[sizeof(pidsScreen4)];
+        //DrawBitMap
+        drawBitmap(BarGraph_bits);
+        // we weten welke pids we gaan ophalen
+        if(obd.readPID(pidsScreen4, sizeof(pidsScreen4), valuesScreen4) == sizeof(pidsScreen4)) {
+          //Draw progress Bars
+          int pbarwidth = 120;
+          int pbarheight = 9;
+          drawProgressbar(5,15,pbarwidth,pbarheight,valuesScreen4[0], 200);
+          drawProgressbar(5,34,pbarwidth,pbarheight,valuesScreen4[1], 100);
+          drawProgressbar(5,53,pbarwidth,pbarheight,valuesScreen4[2], 150);
+          // Draw text
+          u8g2.setFont(u8g2_font_trixel_square_tf); //5 pixel height
+          u8g2.drawStr(5, 13, "MAF");
+          u8g2.drawStr(5, 32, "THROTTLE");
+          u8g2.drawStr(5, 51, "BAR");
+          u8g2.drawStr(65, 7, "DTC KM");
+          u8g2.setCursor(110, 13);
+          u8g2.print(valuesScreen4[0]);       //MAF sensor
+          u8g2.setCursor(110, 32);
+          u8g2.print(valuesScreen4[1]);       //Throttle percentage
+          u8g2.setCursor(110, 51);
+          u8g2.print(valuesScreen4[2]);       //Barrometric pressure
+          u8g2.setCursor(110,7);
+          u8g2.print((unsigned int)valuesScreen4[3]);     //Number of warmups after dtc clear
+          u8g2.drawStr(35, 13, "(gram/%)");
+          u8g2.drawStr(35, 32, "(c)");
+          u8g2.drawStr(35, 51, "(kPa)");
+          u8g2.drawStr(95, 7, "(#)");
+        }
+        else{
+          u8g2.setFont(u8g2_font_profont15_mf);
+          u8g2.drawStr(64,32, "ERROR");
+        }
+      break;
+    }
   }
 }
 
