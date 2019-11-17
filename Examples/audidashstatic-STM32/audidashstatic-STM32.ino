@@ -470,9 +470,11 @@ void reconnect()
 }
 
 //Function to draw progress Bars
-void drawProgressbar(int x,int y, int width,int height, int progress, int progressBarMaxValue)
+void drawProgressbar(int x,int y, int width,int height, int progress, int range)
 {
-  float progressbar = ((float)(width-4) / (progressBarMaxValue)) * progress;
+  //float progressbar = ((float)(width-4) / (progressBarMaxValue)) * progress;
+  float progressbar = ((float)(width) / (range)) * (progress) + 24;
+  //float progressbar = (1.2*progress) +24;
   //u8g2.drawFrame(x, y, width, height);
   u8g2.drawBox(x, y, progressbar , height-4 );
 
@@ -539,17 +541,19 @@ void DrawScreenStatic(int thescreen) {
     case 1: {
         byte pids1[2] = {PID_COOLANT_TEMP, PID_INTAKE_TEMP};
         int valuesStatic1[sizeof(pids1)] = {};
-        valuesStatic1[0] = 12;
-        valuesStatic1[1] = 1210;
+        valuesStatic1[0] = -7;
+        valuesStatic1[1] = 79;
+        int kayleigh = -19;
         int torque = 1000;
         //DrawBitMap
         drawBitmap(BarGraph_bits);
         //Draw progress Bars
         int pbarwidth = 120;
         int pbarheight = 9;
-        drawProgressbar(5,15,pbarwidth,pbarheight,valuesStatic1[0], 2000);
-        drawProgressbar(5,34,pbarwidth,pbarheight,valuesStatic1[1], 2000);
-        drawProgressbar(5,53,pbarwidth,pbarheight,valuesStatic1[1], 2000);
+        drawProgressbar(5,15,pbarwidth,pbarheight,valuesStatic1[0],80);
+        drawProgressbar(5,34,pbarwidth,pbarheight,valuesStatic1[1],40);
+        drawProgressbar(5,53,pbarwidth,pbarheight,kayleigh,55);
+        //drawProgressbar(5,53,pbarwidth,pbarheight,valuesStatic1[1], 2000);
         // Draw text
         u8g2.setFont(u8g2_font_trixel_square_tf); //5 pixel height
         //u8g2.setFont(u8g2_font_profont10_tf); //6 pixel height
@@ -565,7 +569,7 @@ void DrawScreenStatic(int thescreen) {
         u8g2.print(valuesStatic1[1]);
         //bar
         u8g2.setCursor(110, 51);
-        u8g2.print(valuesStatic1[1]);
+        u8g2.print(kayleigh);
         //torque
         u8g2.setCursor(110,7);
         u8g2.print(torque);
