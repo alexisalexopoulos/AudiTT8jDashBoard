@@ -469,16 +469,18 @@ void reconnect()
   }
 }
 
-//Function to draw progress Bars
-void drawProgressbar(int x,int y, int width,int height, int progress, int range)
-{
-  //float progressbar = ((float)(width-4) / (progressBarMaxValue)) * progress;
-  float progressbar = ((float)(width) / (range)) * (progress) + 24;
-  //float progressbar = (1.2*progress) +24;
-  //u8g2.drawFrame(x, y, width, height);
-  u8g2.drawBox(x, y, progressbar , height-4 );
-
-  }
+// x and y are left top corner of the bar
+// length is maximum length of the drawn bar in pixels
+// minval and maxval define the value range of the bar - these can be negative !
+// value is the current value you want to draw
+void drawProgressbar(int x, int y, int length, int minval, int maxval, int height, int value) {
+    if (value > maxval) { value == maxval }
+    int units = maxval - minval
+    float factor =  length / units
+    int offset = -1 * minval
+    int width = static_cast<int>(factor * (value + offset))
+    u8g2.drawbox(x, y, width, height)
+}
 
 /*Text block for vars
 u8g2.setFont(u8g2_font_roentgen_nbp_tr);
